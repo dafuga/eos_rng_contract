@@ -1,0 +1,24 @@
+To Reset:
+
+nodeos --delete-all-blocks
+pkill nodeos &
+pkill keosd &
+keosd &\n
+nodeos -e -p eosio \
+--plugin eosio::producer_plugin \
+--plugin eosio::chain_api_plugin \
+--plugin eosio::http_plugin \
+--plugin eosio::history_plugin \
+--plugin eosio::history_api_plugin \
+--access-control-allow-origin='*' \
+--contracts-console \
+--http-validate-host=false \
+--verbose-http-errors >> nodeos.log 2>&1 &
+tail -f nodeos.log
+
+then follow:
+https://developers.eos.io/eosio-home/docs/getting-the-software
+
+
+
+Password: PW5JwVGAqaHWW3BoimS3Cmc3jPT3DHyQX32RQXxz9z6SqqoWH7mus
