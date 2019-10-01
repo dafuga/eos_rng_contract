@@ -1,7 +1,7 @@
 #include <eosio/eosio.hpp>
 #include <eosio/print.hpp>
 #include <eosio/system.hpp>
-#include "crypto_sign.h"
+#include <eosio/crypto.hpp>
 
 using namespace eosio;
 
@@ -32,17 +32,14 @@ public:
         return;
       }
 
-      bool validHash = crypto_sign_open(iterator -> hash, iterator -> reveal);
-
-      if (!validHash) {
-        return;
-      }
+      // will raise an error if invalid hash
+      assert_sha256(iterator -> reveal, 3, iterator -> hash );
 
       rnumbers.modify(iterator, user, [&]( auto& row ) {
         row.reveal = reveal;
       });
 
-      modify_global_random_number(revealed_number)
+      modify_global_random_number(user, revealed_number)
     }
   }
 
@@ -60,7 +57,7 @@ public:
 private:
   struct [[eosio::table]] random_number {
     name key;
-    std::string hash;
+    eosio::checksum256 hash;
     uint64_t block_number;
     std::string reveal;
 
@@ -71,18 +68,19 @@ private:
 
   struct [[eosio::table]] global_random_number {
     uint64_t time_unit;
-    uint64_t random_number;
+    uint64_t global_random_value;
   
     uint64_t primary_key() const { return time_unit; }
-    uint64_t get_random_number() const { return random_number; }
+    uint64_t get_random_number() const { return global_random_value; }
   };
 
 
   void modify_global_random_number(random_number) {
+    gnumber_index rnumbers(get_first_receiver(), get_first_receiver().value);
+
     auto iterator = gnumbers.find(user.value);
 
-    uint64_t new_random_number = (iterator -> reveal_time) XOR random_number
-
+    uint64_t new_random_number = computeXOR(iterator -> reveal_time);
 
     gnumbers.modify(iterator, self, [&]( auto& row ) {
       row.random_number = new_random_number;
@@ -91,7 +89,24 @@ private:
 
 
   typedef eosio::multi_index<"rnumbers"_n, rnumber> rnumber_index;
-    typedef eosio::multi_index<"gnumbers"_n, gnumber> gnumber_index;
-
-  
+  typedef eosio::multi_index<"gnumbers"_n, gnumber> gnumber_index;
 };
+
+uint64_t computeXOR(uint64_t x, uint64_t y) 
+{ 
+    uint64_t res = 0;
+      
+    for (int i = 31; i >= 0; i--)                      
+    { 
+       // Find current bits in x and y 
+       bool b1 = x & (1 << i); 
+       bool b2 = y & (1 << i); 
+         
+        // If both are 1 then 0 else xor is same as OR 
+        bool xoredBit = (b1 & b2) ? 0 : (b1 | b2);           
+  
+        res <<= 1; 
+        res |= xoredBit; 
+    } 
+    return res; 
+} 
