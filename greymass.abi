@@ -4,6 +4,28 @@
     "types": [],
     "structs": [
         {
+            "name": "committed_r_numbers",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "name"
+                },
+                {
+                    "name": "hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "reveal_time",
+                    "type": "uint64"
+                },
+                {
+                    "name": "revealed_number",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "erase",
             "base": "",
             "fields": [
@@ -14,38 +36,20 @@
             ]
         },
         {
-            "name": "notify",
+            "name": "shared_r_numbers",
             "base": "",
             "fields": [
                 {
-                    "name": "user",
-                    "type": "name"
-                },
-                {
-                    "name": "msg",
-                    "type": "string"
-                }
-            ]
-        },
-        {
-            "name": "rnumber",
-            "base": "",
-            "fields": [
-                {
-                    "name": "key",
-                    "type": "name"
-                },
-                {
-                    "name": "hash",
-                    "type": "string"
-                },
-                {
-                    "name": "reveal_time",
+                    "name": "time_unit",
                     "type": "uint64"
                 },
                 {
-                    "name": "reveal",
-                    "type": "string"
+                    "name": "closest_block",
+                    "type": "uint64"
+                },
+                {
+                    "name": "random_number",
+                    "type": "uint32"
                 }
             ]
         },
@@ -59,11 +63,11 @@
                 },
                 {
                     "name": "hash",
-                    "type": "string"
+                    "type": "checksum256"
                 },
                 {
-                    "name": "reveal",
-                    "type": "string"
+                    "name": "revealed_number",
+                    "type": "uint32"
                 }
             ]
         }
@@ -75,11 +79,6 @@
             "ricardian_contract": ""
         },
         {
-            "name": "notify",
-            "type": "notify",
-            "ricardian_contract": ""
-        },
-        {
             "name": "upsertnumber",
             "type": "upsertnumber",
             "ricardian_contract": ""
@@ -87,8 +86,15 @@
     ],
     "tables": [
         {
-            "name": "rnumbers",
-            "type": "rnumber",
+            "name": "cnumbers",
+            "type": "committed_r_numbers",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "snumbers",
+            "type": "shared_r_numbers",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
