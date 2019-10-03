@@ -29,13 +29,14 @@ public:
         (eosio::current_time_point().sec_since_epoch() > iterator -> reveal_time &&
         eosio::current_time_point().sec_since_epoch() < iterator -> reveal_time + 10);
 
-      if (!validRevealTime) {
-        return;
-      }
+      // if (!validRevealTime) {
+      //   return print("Commit has expired!");
+      // }
 
-      std::string revealed_number_string = std::to_string(iterator -> revealed_number);
+      std::string revealed_number_string = std::to_string(revealed_number);
       char const *revealed_number_char = revealed_number_string.c_str();
 
+      print(revealed_number_char);
       // will raise an error if invalid hash
       assert_sha256(revealed_number_char, 3, iterator -> hash );
 
@@ -45,7 +46,7 @@ public:
 
       int closest_block = iterator -> reveal_time / 500;
 
-      modify_global_random_number(user, revealed_number, closest_block);
+      update_global_random_number(user, revealed_number, closest_block);
     }
   }
 
@@ -77,12 +78,12 @@ private:
     uint64_t primary_key() const { return closest_block; }
   };
 
-  void modify_global_random_number(name user, int random_number, int closest_block) {
+  void update_global_random_number(name user, int random_number, int closest_block) {
     shared_r_number_index shared_r_numbers(get_first_receiver(), get_first_receiver().value);
 
     auto iterator = shared_r_numbers.find(user.value);
 
-    if (iterator != shared_r_numbers.end()) {
+    if (iterator == shared_r_numbers.end()) {
       shared_r_numbers.emplace(user, [&]( auto& row ) {
         row.random_number = random_number;
         row.closest_block = closest_block;
