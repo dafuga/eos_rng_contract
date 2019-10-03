@@ -19,6 +19,4 @@ tail -f nodeos.log
 then follow:
 https://developers.eos.io/eosio-home/docs/getting-the-software
 
-
-
 Password: PW5JwVGAqaHWW3BoimS3Cmc3jPT3DHyQX32RQXxz9z6SqqoWH7mus
