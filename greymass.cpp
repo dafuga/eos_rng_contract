@@ -3,6 +3,7 @@
 #include <eosio/system.hpp>
 #include <eosio/crypto.hpp>
 
+
 using namespace eosio;
 
 class [[eosio::contract("greymass")]] greymass : public eosio::contract {
@@ -67,16 +68,13 @@ private:
     uint32_t revealed_number;
 
     uint64_t primary_key() const { return key.value; }
-    uint64_t get_reveal_time() const { return reveal_time; }
   };
 
   struct [[eosio::table]] shared_r_numbers {
-    uint64_t time_unit;
     uint64_t closest_block;
     uint32_t random_number;
   
-    uint64_t primary_key() const { return time_unit; }
-    uint64_t get_random_number() const { return random_number; }
+    uint64_t primary_key() const { return closest_block; }
   };
 
   void modify_global_random_number(name user, int random_number, int closest_block) {

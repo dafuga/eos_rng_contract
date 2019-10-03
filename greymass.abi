@@ -40,10 +40,6 @@
             "base": "",
             "fields": [
                 {
-                    "name": "time_unit",
-                    "type": "uint64"
-                },
-                {
                     "name": "closest_block",
                     "type": "uint64"
                 },
