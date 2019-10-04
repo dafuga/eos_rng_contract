@@ -3,7 +3,6 @@
 #include <eosio/system.hpp>
 #include <eosio/crypto.hpp>
 
-
 using namespace eosio;
 
 class [[eosio::contract("greymass")]] greymass : public eosio::contract {
@@ -13,21 +12,31 @@ public:
   greymass(name receiver, name code,  datastream<const char*> ds): contract(receiver, code, ds) {}
 
   [[eosio::action]]
-  void upsertnumber(name user, eosio::checksum256 hash, uint32_t revealed_number) {
+  void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block, uint32_t revealed_number) {
     require_auth(user);
+
+    uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 500000;
+
     committed_r_number_index committed_r_numbers(get_first_receiver(), get_first_receiver().value);
+
     auto iterator = committed_r_numbers.find(user.value);
-    if( iterator == committed_r_numbers.end() )
+
+    print(get_first_receiver());
+    print(user.value);
+
+    if( revealed_number == NULL )
     {
+      std::string key_string = user.to_string();
+
+      key_string += std::to_string(reveal_time_block);
+
       committed_r_numbers.emplace(user, [&]( auto& row ) {
-       row.key = user;
+       row.key = key_string;
        row.hash = hash;
-       row.reveal_time = (eosio::current_time_point().sec_since_epoch() + 10);
+       row.reveal_time_block = reveal_time_block;
       });
     } else {
-      bool validRevealTime =
-        (eosio::current_time_point().sec_since_epoch() > iterator -> reveal_time &&
-        eosio::current_time_point().sec_since_epoch() < iterator -> reveal_time + 10);
+      bool validRevealTime = current_time_block == iterator -> reveal_time_block;
 
       // if (!validRevealTime) {
       //   return print("Commit has expired!");
@@ -36,7 +45,6 @@ public:
       std::string revealed_number_string = std::to_string(revealed_number);
       char const *revealed_number_char = revealed_number_string.c_str();
 
-      print(revealed_number_char);
       // will raise an error if invalid hash
       assert_sha256(revealed_number_char, 3, iterator -> hash );
 
@@ -44,9 +52,7 @@ public:
         row.revealed_number = revealed_number;
       });
 
-      int closest_block = iterator -> reveal_time / 500;
-
-      update_global_random_number(user, revealed_number, closest_block);
+      update_global_random_number(user, revealed_number, current_time_block);
     }
   }
 
@@ -65,20 +71,20 @@ private:
   struct [[eosio::table]] committed_r_numbers {
     name key;
     eosio::checksum256 hash;
-    uint64_t reveal_time;
+    uint64_t reveal_time_block;
     uint32_t revealed_number;
 
     uint64_t primary_key() const { return key.value; }
   };
 
   struct [[eosio::table]] shared_r_numbers {
-    uint64_t closest_block;
+    uint64_t time_block;
     uint32_t random_number;
   
-    uint64_t primary_key() const { return closest_block; }
+    uint64_t primary_key() const { return time_block; }
   };
 
-  void update_global_random_number(name user, int random_number, int closest_block) {
+  void update_global_random_number(name user, int random_number, int current_time_block) {
     shared_r_number_index shared_r_numbers(get_first_receiver(), get_first_receiver().value);
 
     auto iterator = shared_r_numbers.find(user.value);
@@ -86,7 +92,7 @@ private:
     if (iterator == shared_r_numbers.end()) {
       shared_r_numbers.emplace(user, [&]( auto& row ) {
         row.random_number = random_number;
-        row.closest_block = closest_block;
+        row.time_block = current_time_block;
       });
     } else {
       uint64_t new_random_number = computeXOR(iterator -> random_number, random_number);
