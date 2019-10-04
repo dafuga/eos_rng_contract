@@ -4,6 +4,28 @@
     "types": [],
     "structs": [
         {
+            "name": "commitnumber",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "reveal_time_block",
+                    "type": "uint32"
+                },
+                {
+                    "name": "revealed_number",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "committed_r_numbers",
             "base": "",
             "fields": [
@@ -16,7 +38,7 @@
                     "type": "checksum256"
                 },
                 {
-                    "name": "reveal_time",
+                    "name": "reveal_time_block",
                     "type": "uint64"
                 },
                 {
@@ -40,7 +62,7 @@
             "base": "",
             "fields": [
                 {
-                    "name": "closest_block",
+                    "name": "time_block",
                     "type": "uint64"
                 },
                 {
@@ -48,35 +70,17 @@
                     "type": "uint32"
                 }
             ]
-        },
-        {
-            "name": "upsertnumber",
-            "base": "",
-            "fields": [
-                {
-                    "name": "user",
-                    "type": "name"
-                },
-                {
-                    "name": "hash",
-                    "type": "checksum256"
-                },
-                {
-                    "name": "revealed_number",
-                    "type": "uint32"
-                }
-            ]
         }
     ],
     "actions": [
         {
-            "name": "erase",
-            "type": "erase",
+            "name": "commitnumber",
+            "type": "commitnumber",
             "ricardian_contract": ""
         },
         {
-            "name": "upsertnumber",
-            "type": "upsertnumber",
+            "name": "erase",
+            "type": "erase",
             "ricardian_contract": ""
         }
     ],

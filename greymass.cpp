@@ -15,32 +15,39 @@ public:
   void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block, uint32_t revealed_number) {
     require_auth(user);
 
-    uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 500000;
-
     committed_r_number_index committed_r_numbers(get_first_receiver(), get_first_receiver().value);
 
     auto iterator = committed_r_numbers.find(user.value);
 
-    print(get_first_receiver());
-    print(user.value);
-
     if( revealed_number == NULL )
     {
-      std::string key_string = user.to_string();
-
-      key_string += std::to_string(reveal_time_block);
-
-      committed_r_numbers.emplace(user, [&]( auto& row ) {
-       row.key = key_string;
-       row.hash = hash;
-       row.reveal_time_block = reveal_time_block;
-      });
+      if (iterator == committed_r_numbers.end()) {
+        committed_r_numbers.emplace(user, [&]( auto& row ) {
+          row.key = user;
+          row.hash = hash;
+          row.reveal_time_block = reveal_time_block;
+        });
+      } else {
+        committed_r_numbers.modify(iterator, user, [&]( auto& row ) {
+          row.hash = hash;
+          row.reveal_time_block = reveal_time_block;
+          row.revealed_number = NULL;
+        });
+      }
+      
     } else {
-      bool validRevealTime = current_time_block == iterator -> reveal_time_block;
 
-      // if (!validRevealTime) {
-      //   return print("Commit has expired!");
-      // }
+      // If already revealed, return an error
+      if (iterator -> revealed_number != 0) {
+        return print("Number has already been revealed!");
+      }
+
+      // If not at correct reveal time, return an error.
+      uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 500000;
+      
+      if (current_time_block != iterator -> reveal_time_block) {
+        return print("Commit has expired!");
+      }
 
       std::string revealed_number_string = std::to_string(revealed_number);
       char const *revealed_number_char = revealed_number_string.c_str();
@@ -52,7 +59,7 @@ public:
         row.revealed_number = revealed_number;
       });
 
-      update_global_random_number(user, revealed_number, current_time_block);
+      update_global_random_number(user, revealed_number, iterator -> reveal_time_block);
     }
   }
 
@@ -87,7 +94,7 @@ private:
   void update_global_random_number(name user, int random_number, int current_time_block) {
     shared_r_number_index shared_r_numbers(get_first_receiver(), get_first_receiver().value);
 
-    auto iterator = shared_r_numbers.find(user.value);
+    auto iterator = shared_r_numbers.find(current_time_block);
 
     if (iterator == shared_r_numbers.end()) {
       shared_r_numbers.emplace(user, [&]( auto& row ) {
