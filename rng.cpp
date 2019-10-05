@@ -15,20 +15,20 @@ public:
   void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block, uint32_t revealed_number) {
     require_auth(user);
 
-    committed_r_number_index committed_r_numbers(get_first_receiver(), get_first_receiver().value);
+    committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
 
-    auto iterator = committed_r_numbers.find(user.value);
+    auto iterator = committed_numbers.find(user.value);
 
     if( revealed_number == NULL )
     {
-      if (iterator == committed_r_numbers.end()) {
-        committed_r_numbers.emplace(user, [&]( auto& row ) {
+      if (iterator == committed_numbers.end()) {
+        committed_numbers.emplace(user, [&]( auto& row ) {
           row.key = user;
           row.hash = hash;
           row.reveal_time_block = reveal_time_block;
         });
       } else {
-        committed_r_numbers.modify(iterator, user, [&]( auto& row ) {
+        committed_numbers.modify(iterator, user, [&]( auto& row ) {
           row.hash = hash;
           row.reveal_time_block = reveal_time_block;
           row.revealed_number = NULL;
@@ -55,7 +55,7 @@ public:
       // will raise an error if invalid hash
       assert_sha256(revealed_number_char, 3, iterator -> hash );
 
-      committed_r_numbers.modify(iterator, user, [&]( auto& row ) {
+      committed_numbers.modify(iterator, user, [&]( auto& row ) {
         row.revealed_number = revealed_number;
       });
 
@@ -67,15 +67,15 @@ public:
   void erase(name user) {
     require_auth(user);
 
-    committed_r_number_index committed_r_numbers(get_first_receiver(), get_first_receiver().value);
+    committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
 
-    auto iterator = committed_r_numbers.find(user.value);
-    check(iterator != committed_r_numbers.end(), "Record does not exist");
-    committed_r_numbers.erase(iterator);
+    auto iterator = committed_numbers.find(user.value);
+    check(iterator != committed_numbers.end(), "Record does not exist");
+    committed_numbers.erase(iterator);
   }
 
 private:
-  struct [[eosio::table]] committed_r_numbers {
+  struct [[eosio::table]] committed_numbers {
     name key;
     eosio::checksum256 hash;
     uint64_t reveal_time_block;
@@ -84,7 +84,7 @@ private:
     uint64_t primary_key() const { return key.value; }
   };
 
-  struct [[eosio::table]] shared_r_numbers {
+  struct [[eosio::table]] random_numbers {
     uint64_t time_block;
     uint32_t random_number;
     uint32_t commits_count;
@@ -93,12 +93,12 @@ private:
   };
 
   void update_global_random_number(name user, int random_number, int current_time_block) {
-    shared_r_number_index shared_r_numbers(get_first_receiver(), get_first_receiver().value);
+    random_numbers_index random_numbers(get_first_receiver(), get_first_receiver().value);
 
-    auto iterator = shared_r_numbers.find(current_time_block);
+    auto iterator = random_numbers.find(current_time_block);
 
-    if (iterator == shared_r_numbers.end()) {
-      shared_r_numbers.emplace(user, [&]( auto& row ) {
+    if (iterator == random_numbers.end()) {
+      random_numbers.emplace(user, [&]( auto& row ) {
         row.random_number = random_number;
         row.time_block = current_time_block;
         row.commits_count = 1;
@@ -106,7 +106,7 @@ private:
     } else {
       uint64_t new_random_number = computeXOR(iterator -> random_number, random_number);
 
-      shared_r_numbers.modify(iterator, _self, [&]( auto& row ) {
+      random_numbers.modify(iterator, _self, [&]( auto& row ) {
         row.random_number = new_random_number;
         row.commits_count += 1;
       });
@@ -131,6 +131,6 @@ private:
     return res;
   }
 
-  typedef eosio::multi_index<"cnumbers"_n, committed_r_numbers> committed_r_number_index;
-  typedef eosio::multi_index<"snumbers"_n, shared_r_numbers> shared_r_number_index;
+  typedef eosio::multi_index<"committednum"_n, committed_numbers> committed_numbers_index;
+  typedef eosio::multi_index<"randomnumber"_n, random_numbers> random_numbers_index;
 };

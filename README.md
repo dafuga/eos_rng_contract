@@ -14,13 +14,13 @@ The process works like such:
     ```
     cleos push action greymass commitnumber '["bob", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", 3140484404, 123]' -p bob@active
     ```
-    The smart contract will automatically validate that the number corresponds to the previously committed hash and that the current block time is also the one that was previously committed. If those conditions are met, then the number will be used in a XOR function to modify the number that is stored on the `snumbers` table for the given time_block. This means that the number becomes truly random as soon as two independent oracles contribute to this smart contract.
+    The smart contract will automatically validate that the number corresponds to the previously committed hash and that the current block time is also the one that was previously committed. If those conditions are met, then the number will be used in a XOR function to modify the number that is stored on the `randomnumber` table for the given time_block. This means that the number becomes truly random as soon as two independent oracles contribute to this smart contract.
     
-3) As soon as two oracles commits a number for a given block, the `snumbers` table can be used to get a randomly generated number at a given time_block.
+3) As soon as two oracles commits a number for a given block, the `randomnumber` table can be used to get a randomly generated number at a given time_block.
 
     Eg.
     ```
-    cleos get table greymass greymass snumbers --lower alice --limit 1
+    cleos get table greymass greymass randomnumber --lower alice --limit 1
     ```
 
 **Note:**
