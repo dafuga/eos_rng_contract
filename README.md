@@ -16,18 +16,18 @@ The process works like such:
     ```
     The smart contract will automatically validate that the number corresponds to the previously committed hash and that the current block time is also the one that was previously committed. If those conditions are met, then the number will be used in a XOR function to modify the number that is stored on the `snumbers` table for the given time_block. This means that the number becomes truly random as soon as two independent oracles contribute to this smart contract.
     
+3) As soon as two oracles commits a number for a given block, the `snumbers` table can be used to get a randomly generated number at a given time_block.
+
+    Eg.
+    ```
+    cleos get table greymass greymass snumbers --lower alice --limit 1
+    ```
+
+**Note:**
+Steps 1 and 2 can be repeated at whatever interval you wish.
+At any time, the entry can be deleted with the erase function which in the case of our friend Bob would be done like this:
     
-And that's it!
-
-As soon as two oracles commits a number for a given block, the `snumbers` table can be used to get a randomly generated number at a given time_block.
-
 Eg.
-```
-cleos get table greymass greymass snumbers --lower alice --limit 1
-```
-
-Note: Steps 1 and 2 can be repeated at whatever interval you wish. At any time, the entry can be deleted with the erase function which in the case of our friend Bob would be done like this:
-
 ```
 cleos push action greymass erase '["bob"]' -p bob@active
 ```
