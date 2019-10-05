@@ -5,11 +5,11 @@
 
 using namespace eosio;
 
-class [[eosio::contract("greymass")]] greymass : public eosio::contract {
+class [[eosio::contract("rng")]] rng : public eosio::contract {
 
 public:
-  
-  greymass(name receiver, name code,  datastream<const char*> ds): contract(receiver, code, ds) {}
+
+  rng(name receiver, name code,  datastream<const char*> ds): contract(receiver, code, ds) {}
 
   [[eosio::action]]
   void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block, uint32_t revealed_number) {
@@ -34,7 +34,7 @@ public:
           row.revealed_number = NULL;
         });
       }
-      
+
     } else {
 
       // If already revealed, return an error
@@ -44,7 +44,7 @@ public:
 
       // If not at correct reveal time, return an error.
       uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 500000;
-      
+
       if (current_time_block != iterator -> reveal_time_block) {
         return print("Commit has expired!");
       }
@@ -87,7 +87,8 @@ private:
   struct [[eosio::table]] shared_r_numbers {
     uint64_t time_block;
     uint32_t random_number;
-  
+    uint32_t commits_count;
+
     uint64_t primary_key() const { return time_block; }
   };
 
@@ -100,33 +101,35 @@ private:
       shared_r_numbers.emplace(user, [&]( auto& row ) {
         row.random_number = random_number;
         row.time_block = current_time_block;
+        row.commits_count = 1;
       });
     } else {
       uint64_t new_random_number = computeXOR(iterator -> random_number, random_number);
 
       shared_r_numbers.modify(iterator, _self, [&]( auto& row ) {
         row.random_number = new_random_number;
+        row.commits_count += 1;
       });
     }
   };
 
-  uint64_t computeXOR(uint64_t x, uint64_t y) 
-  { 
+  uint64_t computeXOR(uint64_t x, uint64_t y)
+  {
     uint64_t res = 0;
-      
-    for (int i = 31; i >= 0; i--) { 
-       // Find current bits in x and y 
-      bool b1 = x & (1 << i); 
-      bool b2 = y & (1 << i); 
-         
-      // If both are 1 then 0 else xor is same as OR 
-      bool xoredBit = (b1 & b2) ? 0 : (b1 | b2);           
 
-      res <<= 1; 
-      res |= xoredBit; 
-    } 
-    return res; 
-  } 
+    for (int i = 31; i >= 0; i--) {
+       // Find current bits in x and y
+      bool b1 = x & (1 << i);
+      bool b2 = y & (1 << i);
+
+      // If both are 1 then 0 else xor is same as OR
+      bool xoredBit = (b1 & b2) ? 0 : (b1 | b2);
+
+      res <<= 1;
+      res |= xoredBit;
+    }
+    return res;
+  }
 
   typedef eosio::multi_index<"cnumbers"_n, committed_r_numbers> committed_r_number_index;
   typedef eosio::multi_index<"snumbers"_n, shared_r_numbers> shared_r_number_index;
