@@ -5,7 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "dotenv": "^8.1.0",
-    "eosjs": "^20.0.0"
+    "eosjs": "^20.0.0",
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {},
   "scripts": {

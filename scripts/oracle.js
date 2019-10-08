@@ -1,4 +1,4 @@
-const commitNumber = require('./wrapppers/commitNumber');
+const commitNumber = require('./wrappers/commitNumber');
 const wait = require('./utils/wait');
 const generateHash = require('./utils/generateHash');
 
@@ -8,7 +8,7 @@ let randomNumberHash;
 let secondsInterval;
 
 (async () => {
-  secondsInterval = process.argv.seconds_interval;
+  secondsInterval = Number(process.argv[2]) || 1;
 
   console.log(`Starting Oracle with "${secondsInterval}" seconds interval.`);
 
@@ -18,28 +18,34 @@ let secondsInterval;
 })();
 
 async function tick() {
+  console.log('ticking!')
+  console.log({timeBlockAwaited});
+  console.log({randomNumberToReveal});
+  console.log({randomNumberHash});
+  console.log({secondsInterval});
+
   if (timeBlockAwaited) {
-    await commitNewNumber();
-  } else {
     await updateCommittedNumber();
+  } else {
+    await commitNewNumber();
   }
 }
 
 async function commitNewNumber() {
+  console.log('commitNumber');
+
   // Generate a new random number and store it and it's hash in memory
   randomNumberToReveal = Math.floor(Math.random() * 999);
   randomNumberHash = generateHash(randomNumberToReveal);
+  timeBlockAwaited= getCurrentTimeBlock() + (secondsInterval * 2 - 1);
 
-  const currentTimeBlock = currentTimeBlock();
-  const revealTimeBlock = currentTimeBlock + (secondsInterval * 2 - 1);
-
-  await commitNumber(randomNumberHash, revealTimeBlock, null)
+  await commitNumber(randomNumberHash, timeBlockAwaited, null);
 
   await tick();
 }
 
 async function updateCommittedNumber() {
-  const currentTimeBlock = currentTimeBlock();
+  const currentTimeBlock = getCurrentTimeBlock();
 
   if (currentTimeBlock && timeBlockAwaited !== currentTimeBlock) {
     await wait(100);
@@ -47,7 +53,8 @@ async function updateCommittedNumber() {
     return updateCommittedNumber();
   }
 
-  await sendCommitTransaction(randomNumberHash, currentTimeBlock, randomNumberToReveal);
+  console.log('updateCommitNumber');
+  await commitNumber(randomNumberHash, currentTimeBlock, randomNumberToReveal);
 
   timeBlockAwaited = null;
   randomNumberToReveal = null;
@@ -56,7 +63,7 @@ async function updateCommittedNumber() {
   await tick();
 }
 
-async function currentTimeBlock() {
+function getCurrentTimeBlock() {
   const millisecondsSinceEpoch = (new Date).getTime();
 
   return Math.floor(millisecondsSinceEpoch / 500);
