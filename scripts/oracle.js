@@ -2,6 +2,7 @@ const commitNumber = require('./wrappers/commitNumber');
 const wait = require('./utils/wait');
 const generateHash = require('./utils/generateHash');
 
+let currentTimeBlock;
 let timeBlockAwaited;
 let randomNumberToReveal;
 let randomNumberHash;
@@ -9,6 +10,7 @@ let secondsInterval;
 
 (async () => {
   secondsInterval = Number(process.argv[2]) || 1;
+  console.log({secondsInterval})
 
   console.log(`Starting Oracle with "${secondsInterval}" seconds interval.`);
 
@@ -18,11 +20,7 @@ let secondsInterval;
 })();
 
 async function tick() {
-  console.log('ticking!')
-  console.log({timeBlockAwaited});
-  console.log({randomNumberToReveal});
-  console.log({randomNumberHash});
-  console.log({secondsInterval});
+  currentTimeBlock =  getCurrentTimeBlock();
 
   if (timeBlockAwaited) {
     await updateCommittedNumber();
@@ -32,12 +30,10 @@ async function tick() {
 }
 
 async function commitNewNumber() {
-  console.log('commitNumber');
-
   // Generate a new random number and store it and it's hash in memory
   randomNumberToReveal = Math.floor(Math.random() * 999);
   randomNumberHash = generateHash(randomNumberToReveal);
-  timeBlockAwaited= getCurrentTimeBlock() + (secondsInterval * 2 - 1);
+  timeBlockAwaited = getCurrentTimeBlock() + secondsInterval;
 
   await commitNumber(randomNumberHash, timeBlockAwaited, null);
 
@@ -45,15 +41,12 @@ async function commitNewNumber() {
 }
 
 async function updateCommittedNumber() {
-  const currentTimeBlock = getCurrentTimeBlock();
-
-  if (currentTimeBlock && timeBlockAwaited !== currentTimeBlock) {
+  if (timeBlockAwaited && timeBlockAwaited !== currentTimeBlock) {
     await wait(100);
 
-    return updateCommittedNumber();
+    return tick();
   }
 
-  console.log('updateCommitNumber');
   await commitNumber(randomNumberHash, currentTimeBlock, randomNumberToReveal);
 
   timeBlockAwaited = null;
@@ -66,5 +59,5 @@ async function updateCommittedNumber() {
 function getCurrentTimeBlock() {
   const millisecondsSinceEpoch = (new Date).getTime();
 
-  return Math.floor(millisecondsSinceEpoch / 500);
+  return Math.floor(millisecondsSinceEpoch / 1000);
 }

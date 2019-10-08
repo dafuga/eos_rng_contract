@@ -26,12 +26,60 @@
             ]
         },
         {
+            "name": "committed_numbers",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "name"
+                },
+                {
+                    "name": "hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "reveal_time_block",
+                    "type": "uint32"
+                },
+                {
+                    "name": "revealed_number",
+                    "type": "uint32"
+                },
+                {
+                    "name": "now_time_block",
+                    "type": "uint32"
+                },
+                {
+                    "name": "previous_time_block",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "erase",
             "base": "",
             "fields": [
                 {
                     "name": "user",
                     "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "random_numbers",
+            "base": "",
+            "fields": [
+                {
+                    "name": "time_block",
+                    "type": "uint64"
+                },
+                {
+                    "name": "random_number",
+                    "type": "uint32"
+                },
+                {
+                    "name": "commits_count",
+                    "type": "uint32"
                 }
             ]
         }

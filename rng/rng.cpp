@@ -43,7 +43,7 @@ public:
       }
 
       // If not at correct reveal time, return an error.
-      uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 500000;
+      uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 1000000;
 
       if (current_time_block != iterator -> reveal_time_block) {
         return print("Commit has expired!");
@@ -57,6 +57,8 @@ public:
 
       committed_numbers.modify(iterator, user, [&]( auto& row ) {
         row.revealed_number = revealed_number;
+        row.now_time_block = current_time_block;
+        row.previous_time_block = iterator -> reveal_time_block;
       });
 
       update_global_random_number(user, revealed_number, iterator -> reveal_time_block);
@@ -78,8 +80,11 @@ private:
   struct [[eosio::table]] committed_numbers {
     name key;
     eosio::checksum256 hash;
-    uint64_t reveal_time_block;
+    uint32_t reveal_time_block;
     uint32_t revealed_number;
+    uint32_t now_time_block;
+    uint32_t previous_time_block;
+
 
     uint64_t primary_key() const { return key.value; }
   };

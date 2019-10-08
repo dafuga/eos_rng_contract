@@ -2,7 +2,7 @@
 A Random Number Generator EOSIO Smart Contract that allows any number of oracles to contribute numbers that are used to generate a truly random number available on an EOSIO table.
 
 The process works like such:
-1) An oracle starts off by committing a hash of the number that they wish to contribute. As they contribute that hash, they will also specify the time block at which they will reveal the number. The time_block is an integer defined by the number of 500 ms trenches time that have passed since the Unix epoch in UTC.
+1) An oracle starts off by committing a hash of the number that they wish to contribute. As they contribute that hash, they will also specify the time block at which they will reveal the number. The time_block is an integer defined by the number of seconds that have passed since the Unix epoch in UTC.
 
     For example, assuming that Bob wants to commit the number `123`, he would first commit the following transaction:
     ```
