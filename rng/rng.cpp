@@ -53,7 +53,7 @@ public:
       char const *revealed_number_char = revealed_number_string.c_str();
 
       // will raise an error if invalid hash
-      assert_sha256(revealed_number_char, 3, iterator -> hash);
+      assert_sha256(revealed_number_char, revealed_number_string.length(), iterator -> hash);
 
       committed_numbers.modify(iterator, user, [&]( auto& row ) {
         row.revealed_number = revealed_number;
