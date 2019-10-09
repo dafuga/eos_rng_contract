@@ -20,7 +20,7 @@ The process works like such:
 
     Eg.
     ```
-    cleos get table greymass greymass randomnumber --lower alice --limit 1
+    cleos get table greymass greymass randomnumber --limit 100
     ```
 
 **Note:**

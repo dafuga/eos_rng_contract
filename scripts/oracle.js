@@ -10,7 +10,6 @@ let secondsInterval;
 
 (async () => {
   secondsInterval = Number(process.argv[2]) || 1;
-  console.log({secondsInterval})
 
   console.log(`Starting Oracle with "${secondsInterval}" seconds interval.`);
 
@@ -35,6 +34,8 @@ async function commitNewNumber() {
   randomNumberHash = generateHash(randomNumberToReveal);
   timeBlockAwaited = getCurrentTimeBlock() + secondsInterval;
 
+  console.log(`Revealed "${randomNumberToReveal}" number at "${currentTimeBlock}" time block.`);
+
   await commitNumber(randomNumberHash, timeBlockAwaited, null);
 
   await tick();
@@ -46,6 +47,8 @@ async function updateCommittedNumber() {
 
     return tick();
   }
+
+  console.log(`Committing "${randomNumberToReveal}" to be revealed on "${currentTimeBlock}" time block.`);
 
   await commitNumber(randomNumberHash, currentTimeBlock, randomNumberToReveal);
 

@@ -8,11 +8,6 @@ module.exports = async function commitNumber(randomNumberHash, timeBlock, random
   const rpc = new JsonRpc(process.env.ORACLE_API_URL, {fetch});
   const api = new Api({rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder()});
 
-  console.log({account: process.env.ORACLE_ACCOUNT_NAME})
-  console.log({permission: process.env.ORACLE_ACCOUNT_PERMISSION})
-  console.log({timeBlock})
-  console.log({randomNumber})
-  console.log({randomNumberHash})
   const actions = {
     actions: [{
       account: 'rnga',
