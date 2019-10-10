@@ -46,4 +46,4 @@ There is a node process that can be used to ge
     ```
     node scripts/oracle.js <interval_in_seconds>
     ```
-    Where "<interval_in_seconds>" is the interval of time between each random number commits defined in seconds.
+    Where `<interval_in_seconds>` is the interval of time between each random number commits defined in seconds.
