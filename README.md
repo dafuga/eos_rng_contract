@@ -1,4 +1,7 @@
 ## Random Number Generator
+
+###NOTE: THIS IS A WORK IN PROGRESS PROJECT - PLEASE DO NOT DEPLOY
+
 A Random Number Generator EOSIO Smart Contract that allows any number of oracles to contribute numbers that are used to generate a truly random number available on an EOSIO table.
 
 The process works like such:
