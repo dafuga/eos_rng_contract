@@ -57,7 +57,6 @@ public:
 
       committed_numbers.modify(iterator, user, [&]( auto& row ) {
         row.revealed_number = revealed_number;
-        row.now_time_block = current_time_block;
         row.previous_time_block = iterator -> reveal_time_block;
       });
 
@@ -111,7 +110,7 @@ private:
     } else {
       uint64_t new_random_number = computeXOR(iterator -> random_number, random_number);
 
-      random_numbers.modify(iterator, _self, [&]( auto& row ) {
+      random_numbers.modify(iterator, user, [&]( auto& row ) {
         row.random_number = new_random_number;
         row.commits_count += 1;
       });
