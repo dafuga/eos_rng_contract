@@ -77,6 +77,10 @@
                 {
                     "name": "commits_count",
                     "type": "uint32"
+                },
+                {
+                    "name": "valid",
+                    "type": "bool"
                 }
             ]
         },

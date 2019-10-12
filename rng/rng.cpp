@@ -2,8 +2,6 @@
 #include <eosio/system.hpp>
 #include <eosio/crypto.hpp>
 
-//#include <eosio/print.hpp>
-
 using namespace eosio;
 
 class [[eosio::contract("rng")]] rng : public eosio::contract {
@@ -142,11 +140,34 @@ private:
     uint32_t time_block;
     uint32_t random_number;
     uint32_t commits_count;
+    bool valid;
 
     uint64_t primary_key() const {
       uint64_t int64_time_block = time_block;
 
       return int64_time_block;
+    }
+  };
+
+  void update_global_random_number(name user, int random_number, int current_time_block) {
+    random_numbers_index random_numbers(get_first_receiver(), get_first_receiver().value);
+
+    auto iterator = random_numbers.find(current_time_block);
+
+    if (iterator == random_numbers.end()) {
+      random_numbers.emplace(_self, [&]( auto& row ) {
+        row.random_number = random_number;
+        row.time_block = current_time_block;
+        row.commits_count = 1;
+      });
+    } else {
+      uint64_t new_random_number = compute_xor(iterator -> random_number, random_number);
+
+      random_numbers.modify(iterator, _self, [&]( auto& row ) {
+        row.random_number = new_random_number;
+        row.commits_count += 1;
+        row.valid = iterator -> commits_count + 1 >= participation_requirement_threshold;
+      });
     }
   };
 
@@ -166,27 +187,6 @@ private:
     if (committed_number_iterator != committed_numbers.end()){
       committed_numbers.erase(committed_number_iterator);
     }
-  }
-
-  void update_global_random_number(name user, int random_number, int current_time_block) {
-    random_numbers_index random_numbers(get_first_receiver(), get_first_receiver().value);
-
-    auto iterator = random_numbers.find(current_time_block);
-
-    if (iterator == random_numbers.end()) {
-      random_numbers.emplace(_self, [&]( auto& row ) {
-        row.random_number = random_number;
-        row.time_block = current_time_block;
-        row.commits_count = 1;
-      });
-    } else {
-      uint64_t new_random_number = compute_xor(iterator -> random_number, random_number);
-
-      random_numbers.modify(iterator, _self, [&]( auto& row ) {
-        row.random_number = new_random_number;
-        row.commits_count += 1;
-      });
-    }
   };
 
   uint64_t compute_xor(uint64_t x, uint64_t y)
@@ -199,10 +199,10 @@ private:
       bool b2 = y & (1 << i);
 
       // If both are 1 then 0 else xor is same as OR
-      bool xoredBit = (b1 & b2) ? 0 : (b1 | b2);
+      bool xored_bit = (b1 & b2) ? 0 : (b1 | b2);
 
       res <<= 1;
-      res |= xoredBit;
+      res |= xored_bit;
     }
     return res;
   }
