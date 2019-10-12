@@ -9,7 +9,7 @@ class [[eosio::contract("rng")]] rng : public eosio::contract {
 
 public:
 
-  rng(name receiver, name code,  datastream<const char*> ds): contract(receiver, code, ds) {}
+  rng(name receiver, name code, datastream<const char*> ds): contract(receiver, code, ds) {}
 
   [[eosio::action]]
   void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block) {
@@ -65,7 +65,6 @@ public:
 
     committed_numbers.modify(iterator, user, [&]( auto& row ) {
       row.revealed_number = revealed_number;
-      row.previous_time_block = iterator -> reveal_time_block;
     });
 
     update_global_random_number(user, revealed_number, iterator -> reveal_time_block);
@@ -88,9 +87,6 @@ private:
     eosio::checksum256 hash;
     uint32_t reveal_time_block;
     uint32_t revealed_number;
-    uint32_t now_time_block;
-    uint32_t previous_time_block;
-
 
     uint64_t primary_key() const { return key.value; }
   };
@@ -102,7 +98,7 @@ private:
 
     uint64_t primary_key() const {
       uint64_t int64_time_block = time_block;
-      
+
       return int64_time_block;
     }
   };

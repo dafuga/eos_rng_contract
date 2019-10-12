@@ -40,14 +40,6 @@
                 {
                     "name": "revealed_number",
                     "type": "uint32"
-                },
-                {
-                    "name": "now_time_block",
-                    "type": "uint32"
-                },
-                {
-                    "name": "previous_time_block",
-                    "type": "uint32"
                 }
             ]
         },
