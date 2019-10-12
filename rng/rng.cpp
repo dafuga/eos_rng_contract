@@ -74,8 +74,27 @@ public:
     committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
 
     auto iterator = committed_numbers.find(user.value);
+
     check(iterator != committed_numbers.end(), "Record does not exist");
+
     committed_numbers.erase(iterator);
+  }
+
+  [[eosio::action]]
+  void cleannumbers() {
+    require_auth(_self);
+
+    uint32_t time_block = current_time_block();
+
+    random_numbers_index random_numbers(get_first_receiver(), get_first_receiver().value);
+
+    for(auto& random_number : random_numbers) {
+      if (random_number.time_block < time_block - 100) {
+        auto iterator = random_numbers.find(random_number.time_block);
+
+        random_numbers.erase(iterator);
+      }
+    }
   }
 
 private:

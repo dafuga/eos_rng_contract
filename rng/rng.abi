@@ -4,6 +4,11 @@
     "types": [],
     "structs": [
         {
+            "name": "cleannumbers",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "commitnumber",
             "base": "",
             "fields": [
@@ -91,6 +96,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "cleannumbers",
+            "type": "cleannumbers",
+            "ricardian_contract": ""
+        },
         {
             "name": "commitnumber",
             "type": "commitnumber",
