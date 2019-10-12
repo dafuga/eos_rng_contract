@@ -83,7 +83,7 @@ private:
     name key;
     eosio::checksum256 hash;
     uint32_t reveal_time_block;
-    uint32_t revealed_number;
+    std::optional<uint32_t> revealed_number;
 
     uint64_t primary_key() const { return key.value; }
   };
