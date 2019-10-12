@@ -68,16 +68,28 @@ public:
   }
 
   [[eosio::action]]
-  void erase(name user) {
+  void regoracle(name user) {
     require_auth(user);
 
-    committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
+    oracles_index oracles(get_first_receiver(), get_first_receiver().value);
 
-    auto iterator = committed_numbers.find(user.value);
+    oracles.emplace(_self, [&]( auto& row ) {
+      row.key = user;
+      row.reg_at_block_time = current_time_block();
+    });
+  }
 
-    check(iterator != committed_numbers.end(), "Record does not exist");
+  [[eosio::action]]
+  void unregoracle(name user) {
+    require_auth(user);
 
-    committed_numbers.erase(iterator);
+    oracles_index oracles(get_first_receiver(), get_first_receiver().value);
+
+    auto iterator = oracles.find(user.value);
+
+    check(iterator != oracles.end(), "Record does not exist");
+
+    oracles.erase(iterator);
   }
 
   [[eosio::action]]
@@ -98,6 +110,13 @@ public:
   }
 
 private:
+  struct [[eosio::table]] oracles {
+    name key;
+    uint32_t reg_at_block_time;
+
+    uint64_t primary_key() const { return key.value; }
+  };
+
   struct [[eosio::table]] committed_numbers {
     name key;
     eosio::checksum256 hash;
@@ -162,6 +181,7 @@ private:
     return eosio::current_time_point().time_since_epoch().count() / 1000000;
   }
 
+  typedef eosio::multi_index<"randomnumber"_n, oracles> oracles_index;
   typedef eosio::multi_index<"committednum"_n, committed_numbers> committed_numbers_index;
   typedef eosio::multi_index<"randomnumber"_n, random_numbers> random_numbers_index;
 };

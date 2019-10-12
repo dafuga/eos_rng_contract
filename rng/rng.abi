@@ -49,12 +49,16 @@
             ]
         },
         {
-            "name": "erase",
+            "name": "oracles",
             "base": "",
             "fields": [
                 {
-                    "name": "user",
+                    "name": "key",
                     "type": "name"
+                },
+                {
+                    "name": "reg_at_block_time",
+                    "type": "uint32"
                 }
             ]
         },
@@ -77,6 +81,16 @@
             ]
         },
         {
+            "name": "regoracle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "revealnumber",
             "base": "",
             "fields": [
@@ -93,6 +107,16 @@
                     "type": "uint32"
                 }
             ]
+        },
+        {
+            "name": "unregoracle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                }
+            ]
         }
     ],
     "actions": [
@@ -107,13 +131,18 @@
             "ricardian_contract": ""
         },
         {
-            "name": "erase",
-            "type": "erase",
+            "name": "regoracle",
+            "type": "regoracle",
             "ricardian_contract": ""
         },
         {
             "name": "revealnumber",
             "type": "revealnumber",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "unregoracle",
+            "type": "unregoracle",
             "ricardian_contract": ""
         }
     ],
@@ -126,8 +155,15 @@
             "key_types": []
         },
         {
-            "name": "randomnumber",
+            "name": "random_numbers",
             "type": "random_numbers",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "randomnumber",
+            "type": "oracles",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
