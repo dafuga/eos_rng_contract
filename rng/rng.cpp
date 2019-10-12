@@ -22,6 +22,11 @@ public:
     if( revealed_number == NULL )
     {
       if (iterator == committed_numbers.end()) {
+        // Make sure that we are not committing to the current block.
+        if (reveal_time_block === current_time_block()) {
+          return print("Cannot commit to revealing a number during current block.");
+        }
+
         committed_numbers.emplace(user, [&]( auto& row ) {
           row.key = user;
           row.hash = hash;
@@ -43,9 +48,7 @@ public:
       }
 
       // If not at correct reveal time, return an error.
-      uint32_t current_time_block = eosio::current_time_point().time_since_epoch().count() / 1000000;
-
-      if (current_time_block != iterator -> reveal_time_block) {
+      if (current_time_block() != iterator -> reveal_time_block) {
         return print("Commit has expired!");
       }
 
@@ -117,7 +120,7 @@ private:
     }
   };
 
-  uint64_t computeXOR(uint64_t x, uint64_t y)
+  uint64_t compute_xor(uint64_t x, uint64_t y)
   {
     uint64_t res = 0;
 
@@ -133,6 +136,10 @@ private:
       res |= xoredBit;
     }
     return res;
+  }
+
+  uint32_t current_time_block() {
+    return eosio::current_time_point().time_since_epoch().count() / 1000000;
   }
 
   typedef eosio::multi_index<"committednum"_n, committed_numbers> committed_numbers_index;
