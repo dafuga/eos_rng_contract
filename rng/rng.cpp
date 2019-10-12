@@ -1,14 +1,14 @@
 #include <eosio/eosio.hpp>
-#include <eosio/print.hpp>
 #include <eosio/system.hpp>
 #include <eosio/crypto.hpp>
+
+//#include <eosio/print.hpp>
 
 using namespace eosio;
 
 class [[eosio::contract("rng")]] rng : public eosio::contract {
 
 public:
-
   rng(name receiver, name code, datastream<const char*> ds): contract(receiver, code, ds) {}
 
   [[eosio::action]]
@@ -21,9 +21,10 @@ public:
 
     if (iterator == committed_numbers.end()) {
       // Make sure that we are not committing to the current block.
-      if (reveal_time_block == current_time_block()) {
-        return print("Cannot commit to revealing a number during current block.");
-      }
+      check(
+        reveal_time_block == current_time_block(),
+        "Cannot commit to revealing a number during current block."
+      );
 
       committed_numbers.emplace(user, [&]( auto& row ) {
         row.key = user;
@@ -48,14 +49,10 @@ public:
     auto iterator = committed_numbers.find(user.value);
 
     // If already revealed, return an error
-    if (iterator -> revealed_number != 0) {
-      return print("Number has already been revealed!");
-    }
+    check(iterator -> revealed_number != NULL, "Number has already been revealed!");
 
     // If not at correct reveal time, return an error.
-    if (current_time_block() != iterator -> reveal_time_block) {
-      return print("Commit has expired!");
-    }
+    check(current_time_block() != iterator -> reveal_time_block, "Commit has expired!");
 
     std::string revealed_number_string = std::to_string(revealed_number);
     char const *revealed_number_char = revealed_number_string.c_str();
