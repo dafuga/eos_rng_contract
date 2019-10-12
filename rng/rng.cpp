@@ -106,7 +106,7 @@ private:
     auto iterator = random_numbers.find(current_time_block);
 
     if (iterator == random_numbers.end()) {
-      random_numbers.emplace(user, [&]( auto& row ) {
+      random_numbers.emplace(_self, [&]( auto& row ) {
         row.random_number = random_number;
         row.time_block = current_time_block;
         row.commits_count = 1;
@@ -114,7 +114,7 @@ private:
     } else {
       uint64_t new_random_number = compute_xor(iterator -> random_number, random_number);
 
-      random_numbers.modify(iterator, user, [&]( auto& row ) {
+      random_numbers.modify(iterator, _self, [&]( auto& row ) {
         row.random_number = new_random_number;
         row.commits_count += 1;
       });
