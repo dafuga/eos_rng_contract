@@ -12,59 +12,63 @@ public:
   rng(name receiver, name code,  datastream<const char*> ds): contract(receiver, code, ds) {}
 
   [[eosio::action]]
-  void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block, uint32_t revealed_number) {
+  void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block) {
     require_auth(user);
 
     committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
 
     auto iterator = committed_numbers.find(user.value);
 
-    if( revealed_number == NULL )
-    {
-      if (iterator == committed_numbers.end()) {
-        // Make sure that we are not committing to the current block.
-        if (reveal_time_block === current_time_block()) {
-          return print("Cannot commit to revealing a number during current block.");
-        }
-
-        committed_numbers.emplace(user, [&]( auto& row ) {
-          row.key = user;
-          row.hash = hash;
-          row.reveal_time_block = reveal_time_block;
-        });
-      } else {
-        committed_numbers.modify(iterator, user, [&]( auto& row ) {
-          row.hash = hash;
-          row.reveal_time_block = reveal_time_block;
-          row.revealed_number = NULL;
-        });
+    if (iterator == committed_numbers.end()) {
+      // Make sure that we are not committing to the current block.
+      if (reveal_time_block == current_time_block()) {
+        return print("Cannot commit to revealing a number during current block.");
       }
 
-    } else {
-
-      // If already revealed, return an error
-      if (iterator -> revealed_number != 0) {
-        return print("Number has already been revealed!");
-      }
-
-      // If not at correct reveal time, return an error.
-      if (current_time_block() != iterator -> reveal_time_block) {
-        return print("Commit has expired!");
-      }
-
-      std::string revealed_number_string = std::to_string(revealed_number);
-      char const *revealed_number_char = revealed_number_string.c_str();
-
-      // will raise an error if invalid hash
-      assert_sha256(revealed_number_char, revealed_number_string.length(), iterator -> hash);
-
-      committed_numbers.modify(iterator, user, [&]( auto& row ) {
-        row.revealed_number = revealed_number;
-        row.previous_time_block = iterator -> reveal_time_block;
+      committed_numbers.emplace(user, [&]( auto& row ) {
+        row.key = user;
+        row.hash = hash;
+        row.reveal_time_block = reveal_time_block;
       });
-
-      update_global_random_number(user, revealed_number, iterator -> reveal_time_block);
+    } else {
+      committed_numbers.modify(iterator, user, [&]( auto& row ) {
+        row.hash = hash;
+        row.reveal_time_block = reveal_time_block;
+        row.revealed_number = NULL;
+      });
     }
+  }
+
+  [[eosio::action]]
+  void revealnumber(name user, uint32_t reveal_time_block, uint32_t revealed_number) {
+    require_auth(user);
+
+    committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
+
+    auto iterator = committed_numbers.find(user.value);
+
+    // If already revealed, return an error
+    if (iterator -> revealed_number != 0) {
+      return print("Number has already been revealed!");
+    }
+
+    // If not at correct reveal time, return an error.
+    if (current_time_block() != iterator -> reveal_time_block) {
+      return print("Commit has expired!");
+    }
+
+    std::string revealed_number_string = std::to_string(revealed_number);
+    char const *revealed_number_char = revealed_number_string.c_str();
+
+    // will raise an error if invalid hash
+    assert_sha256(revealed_number_char, revealed_number_string.length(), iterator -> hash);
+
+    committed_numbers.modify(iterator, user, [&]( auto& row ) {
+      row.revealed_number = revealed_number;
+      row.previous_time_block = iterator -> reveal_time_block;
+    });
+
+    update_global_random_number(user, revealed_number, iterator -> reveal_time_block);
   }
 
   [[eosio::action]]
@@ -111,7 +115,7 @@ private:
         row.commits_count = 1;
       });
     } else {
-      uint64_t new_random_number = computeXOR(iterator -> random_number, random_number);
+      uint64_t new_random_number = compute_xor(iterator -> random_number, random_number);
 
       random_numbers.modify(iterator, user, [&]( auto& row ) {
         row.random_number = new_random_number;

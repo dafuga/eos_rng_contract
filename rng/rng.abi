@@ -18,10 +18,6 @@
                 {
                     "name": "reveal_time_block",
                     "type": "uint32"
-                },
-                {
-                    "name": "revealed_number",
-                    "type": "uint32"
                 }
             ]
         },
@@ -82,6 +78,24 @@
                     "type": "uint32"
                 }
             ]
+        },
+        {
+            "name": "revealnumber",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "reveal_time_block",
+                    "type": "uint32"
+                },
+                {
+                    "name": "revealed_number",
+                    "type": "uint32"
+                }
+            ]
         }
     ],
     "actions": [
@@ -93,6 +107,11 @@
         {
             "name": "erase",
             "type": "erase",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "revealnumber",
+            "type": "revealnumber",
             "ricardian_contract": ""
         }
     ],
