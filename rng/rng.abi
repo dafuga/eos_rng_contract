@@ -113,6 +113,20 @@
             ]
         },
         {
+            "name": "stats",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "name"
+                },
+                {
+                    "name": "oracles_count",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "unregoracle",
             "base": "",
             "fields": [
@@ -168,6 +182,13 @@
         {
             "name": "randomnumber",
             "type": "random_numbers",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stat",
+            "type": "stats",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

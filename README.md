@@ -9,26 +9,26 @@ The process works like such:
 
     For example, assuming that Bob wants to commit the number `123`, he would first commit the following transaction:
     ```
-    cleos push action greymass commitnumber '["bob", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", 3140484404, null]' -p bob@active
+    cleos push action greymass commitnumber '["bob", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", 3140484404]' -p bob@active
     ```
     
 2) Once the current time in UTC belongs to the time block defined in #1, the number can be revealed by passing it as an argument.
     In the case of Bob, that would look like this:
     ```
-    cleos push action greymass commitnumber '["bob", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", 3140484404, 123]' -p bob@active
+    cleos push action greymass revealnumber '["bob", 3140484404, 123]' -p bob@active
     ```
     The smart contract will automatically validate that the number corresponds to the previously committed hash and that the current block time is also the one that was previously committed. If those conditions are met, then the number will be used in a XOR function to modify the number that is stored on the `randomnumber` table for the given time_block. This means that the number becomes truly random as soon as two independent oracles contribute to this smart contract.
     
-3) As soon as two oracles commits a number for a given block, the `randomnumber` table can be used to get a randomly generated number at a given time_block.
-
-    Eg.
+3) As soon as 60% of oracles commit a number for a given block, the `randomnumber` row will be flagged as `valid`.
+    
+    The `randomnumber` table can be queried for valid random numbers as such:
     ```
-    cleos get table greymass greymass randomnumber --limit 100
+    cleos get table greymass greymass randomnumber --key-type i64 --index 2 -L "1"
     ```
 
 **Note:**
-Steps 1 and 2 can be repeated at whatever interval you wish.
-At any time, the entry can be deleted with the erase function which in the case of our friend Bob would be done like this:
+- Steps 1 and 2 can be repeated at whatever interval you wish.
+- At any time, the entry can be deleted with the erase function which in the case of our friend Bob would be done like this:
     
 Eg.
 ```
@@ -40,7 +40,6 @@ cleos push action greymass erase '["bob"]' -p bob@active
 
 There is a node process that can be used to ge
 1) Run `cp .env.sample .env` and change the placeholders for the credentials of the account that you wish to use.
-
 2) Run `npm install`;
 3) Start the oracle process with
     ```
