@@ -96,11 +96,15 @@ private:
   };
 
   struct [[eosio::table]] random_numbers {
-    uint64_t time_block;
+    uint32_t time_block;
     uint32_t random_number;
     uint32_t commits_count;
 
-    uint64_t primary_key() const { return time_block; }
+    uint64_t primary_key() const {
+      uint64_t int64_time_block = time_block;
+      
+      return int64_time_block;
+    }
   };
 
   void update_global_random_number(name user, int random_number, int current_time_block) {

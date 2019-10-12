@@ -67,7 +67,7 @@
             "fields": [
                 {
                     "name": "time_block",
-                    "type": "uint64"
+                    "type": "uint32"
                 },
                 {
                     "name": "random_number",
