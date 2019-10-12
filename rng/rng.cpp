@@ -7,6 +7,8 @@
 using namespace eosio;
 
 class [[eosio::contract("rng")]] rng : public eosio::contract {
+  int oracle_registration_delay = 1000;
+  int participation_requirement_threshold = 2;
 
 public:
   rng(name receiver, name code, datastream<const char*> ds): contract(receiver, code, ds) {}
@@ -15,14 +17,31 @@ public:
   void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block) {
     require_auth(user);
 
+    uint32_t current_block = current_time_block();
+
+    oracles_index oracles(get_first_receiver(), get_first_receiver().value);
+    auto oracles_iterator = oracles.find(user.value);
+
+    bool is_invalid_oracle =
+      oracles_iterator == oracles.end() ||
+      current_block - oracle_registration_delay < oracles_iterator -> reg_at_block_time;
+
+    check(
+      is_invalid_oracle,
+      "Commits can only be made by oracles that have been registered for 1000 time blocks."
+    );
+
     committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
+    auto committed_numbers_iterator = committed_numbers.find(user.value);
 
-    auto iterator = committed_numbers.find(user.value);
+    if (committed_numbers_iterator -> revealed_number == NULL) {
+      remove_oracle_data(user);
+    }
 
-    if (iterator == committed_numbers.end()) {
+    if (committed_numbers_iterator == committed_numbers.end()) {
       // Make sure that we are not committing to the current block.
       check(
-        reveal_time_block == current_time_block(),
+        reveal_time_block == current_block,
         "Cannot commit to revealing a number during current block."
       );
 
@@ -32,10 +51,9 @@ public:
         row.reveal_time_block = reveal_time_block;
       });
     } else {
-      committed_numbers.modify(iterator, user, [&]( auto& row ) {
+      committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
         row.hash = hash;
         row.reveal_time_block = reveal_time_block;
-        row.revealed_number = NULL;
       });
     }
   }
@@ -48,7 +66,7 @@ public:
 
     auto iterator = committed_numbers.find(user.value);
 
-    // If already revealed, return an error
+    // If already revealed, return an error.
     check(iterator -> revealed_number != NULL, "Number has already been revealed!");
 
     // If not at correct reveal time, return an error.
@@ -83,13 +101,7 @@ public:
   void unregoracle(name user) {
     require_auth(user);
 
-    oracles_index oracles(get_first_receiver(), get_first_receiver().value);
-
-    auto iterator = oracles.find(user.value);
-
-    check(iterator != oracles.end(), "Record does not exist");
-
-    oracles.erase(iterator);
+    remove_oracle_data(user);
   }
 
   [[eosio::action]]
@@ -138,6 +150,24 @@ private:
     }
   };
 
+  void remove_oracle_data(name user) {
+    oracles_index oracles(get_first_receiver(), get_first_receiver().value);
+
+    auto oracles_iterator = oracles.find(user.value);
+
+    check(oracles_iterator != oracles.end(), "Oracle does not exist");
+
+    oracles.erase(oracles_iterator);
+
+    committed_numbers_index committed_numbers(get_first_receiver(), get_first_receiver().value);
+
+    auto committed_number_iterator = committed_numbers.find(user.value);
+
+    if (committed_number_iterator != committed_numbers.end()){
+      committed_numbers.erase(committed_number_iterator);
+    }
+  }
+
   void update_global_random_number(name user, int random_number, int current_time_block) {
     random_numbers_index random_numbers(get_first_receiver(), get_first_receiver().value);
 
@@ -181,7 +211,7 @@ private:
     return eosio::current_time_point().time_since_epoch().count() / 1000000;
   }
 
-  typedef eosio::multi_index<"randomnumber"_n, oracles> oracles_index;
+  typedef eosio::multi_index<"oracle"_n, oracles> oracles_index;
   typedef eosio::multi_index<"committednum"_n, committed_numbers> committed_numbers_index;
   typedef eosio::multi_index<"randomnumber"_n, random_numbers> random_numbers_index;
 };

@@ -155,15 +155,15 @@
             "key_types": []
         },
         {
-            "name": "random_numbers",
-            "type": "random_numbers",
+            "name": "oracle",
+            "type": "oracles",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
         },
         {
             "name": "randomnumber",
-            "type": "oracles",
+            "type": "random_numbers",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
