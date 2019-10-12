@@ -6,8 +6,8 @@ using namespace eosio;
 
 class [[eosio::contract("rng")]] rng : public eosio::contract {
   int oracle_registration_delay = 1000;
-  int random_numbers_to_keep_in_mem = 100;
-  double participation_requirement_threshold = 0.6;
+  int number_of_seconds_to_keep_random_numbers = 100;
+  float participation_requirement_threshold = 0.6;
 
 public:
   rng(name receiver, name code, datastream<const char*> ds): contract(receiver, code, ds) {}
@@ -127,7 +127,7 @@ public:
 
     // Going through every single random_number and deleting old rows.
     for(auto& random_number : random_numbers) {
-      if (random_number.time_block < time_block - time_before_random_number_removed) {
+      if (random_number.time_block < time_block - number_of_seconds_to_keep_random_numbers) {
         auto iterator = random_numbers.find(random_number.time_block);
 
         random_numbers.erase(iterator);
@@ -136,68 +136,31 @@ public:
   }
 
 private:
-  struct [[eosio::table]] stats {
-    name key;
-    uint32_t oracles_count;
-
-    uint64_t primary_key() const { return key.value; }
-  };
-
-  struct [[eosio::table]] oracles {
-    name key;
-    uint32_t reg_at_block_time;
-
-    uint64_t primary_key() const { return key.value; }
-  };
-
-  struct [[eosio::table]] committed_numbers {
-    name key;
-    eosio::checksum256 hash;
-    uint32_t reveal_time_block;
-    std::optional<uint32_t> revealed_number;
-
-    uint64_t primary_key() const { return key.value; }
-  };
-
-  struct [[eosio::table]] random_numbers {
-    uint32_t time_block;
-    uint32_t random_number;
-    uint32_t commits_count;
-    bool valid;
-
-    uint64_t primary_key() const {
-      uint64_t int64_time_block = time_block;
-
-      return int64_time_block;
-    }
-
-    // Added a secondary index to allow for filtering by the valid field.
-    uint64_t get_secondary_1() const {
-      uint64_t int64_valid = valid;
-
-      return int64_valid;
-    }
-  };
-
   void update_global_random_number(name user, int random_number, int current_time_block) {
     random_numbers_index random_numbers(get_self(), get_first_receiver().value);
-
-    auto iterator = random_numbers.find(current_time_block);
+    auto random_numbers_iterator = random_numbers.find(current_time_block);
 
     // Updating the random number value for the current block.
-    if (iterator == random_numbers.end()) {
+    if (random_numbers_iterator == random_numbers.end()) {
       random_numbers.emplace(_self, [&]( auto& row ) {
         row.random_number = random_number;
         row.time_block = current_time_block;
         row.commits_count = 1;
       });
     } else {
-      uint64_t new_random_number = compute_xor(iterator -> random_number, random_number);
+      uint64_t new_random_number = compute_xor(random_numbers_iterator -> random_number, random_number);
 
-      random_numbers.modify(iterator, _self, [&]( auto& row ) {
+      stats_index stats(get_self(), get_first_receiver().value);
+      auto stats_iterator = stats.find(get_self().value);
+
+      random_numbers.modify(random_numbers_iterator, _self, [&]( auto& row ) {
         row.random_number = new_random_number;
         row.commits_count += 1;
-        row.valid = iterator -> commits_count + 1 >= participation_requirement_threshold;
+
+        int commits_count = random_numbers_iterator -> commits_count + 1;
+        int oracles_count = stats_iterator -> oracles_count;
+
+        row.valid = (float)commits_count / (float)oracles_count >= participation_requirement_threshold;
       });
     }
   };
@@ -250,9 +213,54 @@ private:
     return res;
   }
 
+  // Current time block number is defined as the number of seconds since UNIX epoch.
   uint32_t current_time_block() {
     return eosio::current_time_point().time_since_epoch().count() / 1000000;
   }
+
+  // Tables declaration:
+  struct [[eosio::table]] stats {
+    name key;
+    uint32_t oracles_count;
+
+    uint64_t primary_key() const { return key.value; }
+  };
+
+  struct [[eosio::table]] oracles {
+    name key;
+    uint32_t reg_at_block_time;
+
+    uint64_t primary_key() const { return key.value; }
+  };
+
+  struct [[eosio::table]] committed_numbers {
+    name key;
+    eosio::checksum256 hash;
+    uint32_t reveal_time_block;
+    std::optional<uint32_t> revealed_number;
+
+    uint64_t primary_key() const { return key.value; }
+  };
+
+  struct [[eosio::table]] random_numbers {
+    uint32_t time_block;
+    uint32_t random_number;
+    uint32_t commits_count;
+    bool valid;
+
+    uint64_t primary_key() const {
+      uint64_t int64_time_block = time_block;
+
+      return int64_time_block;
+    }
+
+    // Added a secondary index to allow for filtering by the valid field.
+    uint64_t get_secondary_1() const {
+      uint64_t int64_valid = valid;
+
+      return int64_valid;
+    }
+  };
 
   typedef eosio::multi_index<"stat"_n, stats> stats_index;
   typedef eosio::multi_index<"oracle"_n, oracles> oracles_index;
