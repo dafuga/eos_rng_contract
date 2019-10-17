@@ -47,7 +47,7 @@ async function revealCommittedNumber() {
   console.log({currentTimeBlock})
   console.log({timeBlockAwaited})
   if (timeBlockAwaited && timeBlockAwaited !== currentTimeBlock) {
-    await wait(100);
+    await wait(50);
 
     return tick();
   }
