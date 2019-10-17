@@ -33,11 +33,11 @@ public:
     committed_numbers_index committed_numbers(get_self(), get_first_receiver().value);
     auto committed_numbers_iterator = committed_numbers.find(user.value);
 
-    if (committed_numbers_iterator -> revealed_number == NULL) {
-      remove_oracle_data(user);
-    }
-
     if (committed_numbers_iterator == committed_numbers.end()) {
+      // Remove oracle if he has not revealed during last commit.
+      if (!(committed_numbers_iterator -> revealed_number)) {
+        remove_oracle_data(user);
+      }
       // Make sure that we are not committing to the current block.
       check(
         reveal_time_block == current_block,
