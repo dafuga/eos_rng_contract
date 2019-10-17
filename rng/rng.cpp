@@ -5,7 +5,7 @@
 using namespace eosio;
 
 class [[eosio::contract("rng")]] rng : public eosio::contract {
-  int oracle_registration_delay = 1000;
+  int oracle_registration_delay = 10;
   int number_of_seconds_to_keep_random_numbers = 100;
   float participation_requirement_threshold = 0.6;
 
@@ -21,12 +21,12 @@ public:
     oracles_index oracles(get_self(), get_first_receiver().value);
     auto oracles_iterator = oracles.find(user.value);
 
-    bool is_invalid_oracle =
-      oracles_iterator == oracles.end() ||
-      current_block - oracle_registration_delay < oracles_iterator -> reg_at_block_time;
+    bool is_valid_oracle =
+      oracles_iterator != oracles.end() &&
+      current_block - oracle_registration_delay > oracles_iterator -> reg_at_block_time;
 
     check(
-      is_invalid_oracle,
+      is_valid_oracle,
       "Commits can only be made by oracles that have been registered for 1000 time blocks."
     );
 
@@ -53,6 +53,7 @@ public:
       committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
         row.hash = hash;
         row.reveal_time_block = reveal_time_block;
+        row.revealed_number = NULL;
       });
     }
   }
@@ -66,10 +67,10 @@ public:
     auto iterator = committed_numbers.find(user.value);
 
     // If already revealed, return an error.
-    check(iterator -> revealed_number != NULL, "Number has already been revealed!");
+    check(!(iterator -> revealed_number), "Number has already been revealed.");
 
     // If not at correct reveal time, return an error.
-    check(current_time_block() != iterator -> reveal_time_block, "Commit has expired!");
+    check(current_time_block() == iterator -> reveal_time_block, "Commit has expired.");
 
     std::string revealed_number_string = std::to_string(revealed_number);
     char const *revealed_number_char = revealed_number_string.c_str();
@@ -99,13 +100,13 @@ public:
     auto stats_iterator = stats.find(get_self().value);
 
     if (stats_iterator == stats.end()) {
-      stats.modify(stats_iterator, _self, [&]( auto& row ) {
-        row.oracles_count += 1;
-      });
-    } else {
       stats.emplace(_self, [&]( auto& row ) {
         row.key = user;
         row.oracles_count = 1;
+      });
+    } else {
+      stats.modify(stats_iterator, _self, [&]( auto& row ) {
+        row.oracles_count += 1;
       });
     }
   }
@@ -171,7 +172,7 @@ private:
 
     auto oracles_iterator = oracles.find(user.value);
 
-    check(oracles_iterator != oracles.end(), "Oracle does not exist");
+    check(oracles_iterator != oracles.end(), "Oracle does not exist.");
 
     oracles.erase(oracles_iterator);
 
