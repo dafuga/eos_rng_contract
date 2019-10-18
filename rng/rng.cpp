@@ -250,16 +250,12 @@ private:
     bool valid;
 
     uint64_t primary_key() const {
-      uint64_t int64_time_block = time_block;
-
-      return int64_time_block;
+      return static_cast<uint64_t>(time_block);
     }
 
     // Added a secondary index to allow for filtering by the valid field.
     uint64_t get_secondary_1() const {
-      uint64_t int64_valid = valid;
-
-      return int64_valid;
+      return static_cast<uint64_t>(valid);
     }
   };
 
