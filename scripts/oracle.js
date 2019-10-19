@@ -1,10 +1,12 @@
-const commitNumber = require('./wrappers/commitNumber');
-const revealNumber = require('./wrappers/revealNumber');
+const commitNumber = require('./wrappers/commitnumber');
+const revealNumber = require('./wrappers/revealnumber');
+const regOracle = require('./wrappers/regoracle');
+
+const getTable = require('./wrappers/getTable');
 
 const generateHash = require('./utils/generateHash');
 const wait = require('./utils/wait');
 
-let currentTimeBlock;
 let timeBlockAwaited;
 let randomNumberToReveal;
 let randomNumberHash;
@@ -17,12 +19,14 @@ let secondsInterval;
 
   require('dotenv').config();
 
+  await waitForBeginningOfNextIntervalBlock();
+
+  await registerOracle();
+
   await tick()
 })();
 
 async function tick() {
-  currentTimeBlock =  getCurrentTimeBlock();
-
   if (timeBlockAwaited) {
     await revealCommittedNumber();
   } else {
@@ -36,25 +40,38 @@ async function commitNewNumber() {
   randomNumberHash = generateHash(randomNumberToReveal);
   timeBlockAwaited = getCurrentTimeBlock() + secondsInterval;
 
-  console.log(`Committing "${randomNumberToReveal}" to be revealed on "${currentTimeBlock}" time block.`);
+  console.log(`Committing "${randomNumberToReveal}" to be revealed on "${timeBlockAwaited}" time block.`);
 
-  await commitNumber(randomNumberHash, timeBlockAwaited);
+  console.log({ committingTimeBlock: getCurrentTimeBlock() });
+  const commitSucceeded = await commitNumber(randomNumberHash, timeBlockAwaited);
+
+  console.log({oracles: await getTable('oracle')});
+
+  if (!commitSucceeded) {
+    timeBlockAwaited = null;
+    randomNumberToReveal = null;
+    randomNumberHash = null;
+
+    await registerOracle();
+  }
 
   await tick();
 }
 
 async function revealCommittedNumber() {
-  console.log({currentTimeBlock})
-  console.log({timeBlockAwaited})
-  if (timeBlockAwaited && timeBlockAwaited !== currentTimeBlock) {
+  if (timeBlockAwaited && timeBlockAwaited !== getCurrentTimeBlock()) {
     await wait(50);
 
-    return tick();
+    return await revealCommittedNumber();
   }
 
-  await revealNumber(currentTimeBlock, randomNumberToReveal);
+  const revealSucceeded = await revealNumber(getCurrentTimeBlock(), randomNumberToReveal);
 
-  console.log(`Revealed "${randomNumberToReveal}" number at "${currentTimeBlock}" time block.`);
+  if (!revealSucceeded) {
+    await wait(10000);
+  }
+
+  console.log(`Revealed "${randomNumberToReveal}" number at "${getCurrentTimeBlock()}" time block.`);
 
   timeBlockAwaited = null;
   randomNumberToReveal = null;
@@ -66,8 +83,27 @@ async function revealCommittedNumber() {
   await tick();
 }
 
+async function waitForBeginningOfNextIntervalBlock() {
+  console.log('Waiting for beginning of next interval block.');
+  const currentTime = getCurrentTimeBlock();
+  const secondsInInterval = currentTime % secondsInterval;
+
+  const nextTimeBlock = secondsInterval - secondsInInterval + currentTime;
+
+  while (nextTimeBlock !== getCurrentTimeBlock()) {
+    await wait(50);
+  }
+}
+
 function getCurrentTimeBlock() {
   const millisecondsSinceEpoch = (new Date).getTime();
 
   return Math.floor(millisecondsSinceEpoch / 1000);
+}
+
+async function registerOracle() {
+  console.log(`Registering Oracle.`);
+  await regOracle();
+  console.log(`Waiting "${process.env.ORACLE_REGISTRATION_DELAY}" blocks to become a valid oracle.`);
+  await wait(process.env.ORACLE_REGISTRATION_DELAY * 1100);
 }

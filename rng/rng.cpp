@@ -1,6 +1,7 @@
-#include <eosio/eosio.hpp>
-#include <eosio/system.hpp>
 #include <eosio/crypto.hpp>
+#include <eosio/eosio.hpp>
+#include <eosio/print.hpp>
+#include <eosio/system.hpp>
 
 using namespace eosio;
 
@@ -14,9 +15,9 @@ public:
 
   [[eosio::action]]
   void commitnumber(name user, eosio::checksum256 hash, uint32_t reveal_time_block) {
-    require_auth(user);
-
     uint32_t current_block = current_time_block();
+
+    require_auth(user);
 
     oracles_index oracles(get_self(), get_first_receiver().value);
     auto oracles_iterator = oracles.find(user.value);
@@ -27,50 +28,61 @@ public:
 
     check(
       is_valid_oracle,
-      "Commits can only be made by oracles that have been registered for 1000 time blocks."
+      "Commits can only be made by oracles that have been registered for " +
+       std::to_string(oracle_registration_delay) +
+       " time blocks."
+    );
+
+    // Make sure that we are not committing to the current block.
+    check(
+      reveal_time_block > current_block,
+      "Block Time must be in future."
     );
 
     committed_numbers_index committed_numbers(get_self(), get_first_receiver().value);
     auto committed_numbers_iterator = committed_numbers.find(user.value);
 
     if (committed_numbers_iterator == committed_numbers.end()) {
-      // Remove oracle if he has not revealed during last commit.
-      if (!(committed_numbers_iterator -> revealed_number)) {
-        remove_oracle_data(user);
-      }
-      // Make sure that we are not committing to the current block.
-      check(
-        reveal_time_block == current_block,
-        "Cannot commit to revealing a number during current block."
-      );
-
       committed_numbers.emplace(user, [&]( auto& row ) {
         row.key = user;
         row.hash = hash;
         row.reveal_time_block = reveal_time_block;
       });
     } else {
-      committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
-        row.hash = hash;
-        row.reveal_time_block = reveal_time_block;
-        row.revealed_number = NULL;
-      });
+      if (!*(committed_numbers_iterator -> revealed_number)) {
+        remove_oracle_data(user);
+
+        return print("Didn't reveal last number therefore removed from oracles.");
+      } else {
+        committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
+          row.hash = hash;
+          row.reveal_time_block = reveal_time_block;
+        });
+      }
     }
   }
 
   [[eosio::action]]
   void revealnumber(name user, uint32_t reveal_time_block, uint32_t revealed_number) {
+    uint32_t time_block = current_time_block();
+
     require_auth(user);
 
     committed_numbers_index committed_numbers(get_self(), get_first_receiver().value);
 
     auto iterator = committed_numbers.find(user.value);
 
+    // If a commit was not made, return an error.
+    check(iterator != committed_numbers.end(), "No commits were made.");
+
+    // If before reveal time, return an error.
+    check(time_block >= iterator -> reveal_time_block, "Commit is revealed too early.");
+
+    // If after reveal time, return an error.
+    check(time_block == iterator -> reveal_time_block, "Commit has expired.");
+
     // If already revealed, return an error.
     check(!(iterator -> revealed_number), "Number has already been revealed.");
-
-    // If not at correct reveal time, return an error.
-    check(current_time_block() == iterator -> reveal_time_block, "Commit has expired.");
 
     std::string revealed_number_string = std::to_string(revealed_number);
     char const *revealed_number_char = revealed_number_string.c_str();
@@ -101,7 +113,7 @@ public:
 
     if (stats_iterator == stats.end()) {
       stats.emplace(_self, [&]( auto& row ) {
-        row.key = user;
+        row.key = get_self();
         row.oracles_count = 1;
       });
     } else {
@@ -189,7 +201,7 @@ private:
     stats_index stats(get_self(), get_first_receiver().value);
     auto stats_iterator = stats.find(get_self().value);
 
-    if (stats_iterator == stats.end()) {
+    if (stats_iterator != stats.end()) {
       stats.modify(stats_iterator, _self, [&]( auto& row ) {
         row.oracles_count -= 1;
       });
