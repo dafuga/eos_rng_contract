@@ -13,7 +13,7 @@ let randomNumberHash;
 let secondsInterval;
 
 (async () => {
-  secondsInterval = Number(process.argv[2]) || 1;
+  secondsInterval = Number(process.argv[2]) || 2;
 
   console.log(`Starting Oracle with "${secondsInterval}" seconds interval.`);
 
@@ -85,10 +85,12 @@ async function revealCommittedNumber() {
 
 async function waitForBeginningOfNextIntervalBlock() {
   console.log('Waiting for beginning of next interval block.');
-  const currentTime = getCurrentTimeBlock();
-  const secondsInInterval = currentTime % secondsInterval;
+  const currentTimeBlock = getCurrentTimeBlock();
 
-  const nextTimeBlock = secondsInterval - secondsInInterval + currentTime;
+  // Looking for reminder of time until next interval starts
+  const secondsInInterval = (currentTimeBlock) % secondsInterval;
+
+  const nextTimeBlock = secondsInterval - secondsInInterval + currentTimeBlock - 1 ;
 
   while (nextTimeBlock !== getCurrentTimeBlock()) {
     await wait(50);
