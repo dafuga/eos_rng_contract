@@ -208,11 +208,11 @@ private:
     }
   };
 
-  uint64_t compute_xor(uint64_t x, uint64_t y)
+  uint32_t compute_xor(uint32_t x, uint32_t y)
   {
-    uint64_t res = 0;
+    uint32_t res = 0;
 
-    for (int i = 31; i >= 0; i--) {
+    for (int i = 15; i >= 0; i--) {
        // Find current bits in x and y
       bool b1 = x & (1 << i);
       bool b2 = y & (1 << i);
