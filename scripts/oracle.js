@@ -36,7 +36,7 @@ async function tick() {
 
 async function commitNewNumber() {
   // Generate a new random number and store it and it's hash in memory
-  randomNumberToReveal = Math.floor(Math.random() * 999);
+  randomNumberToReveal = Math.floor(Math.random() * 998 + 1);
   randomNumberHash = generateHash(randomNumberToReveal);
   timeBlockAwaited = getCurrentTimeBlock() + secondsInterval;
 
