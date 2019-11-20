@@ -49,7 +49,7 @@ public:
         row.reveal_time_block = reveal_time_block;
       });
     } else {
-      if (!*(committed_numbers_iterator -> revealed_number)) {
+      if (!(committed_numbers_iterator -> revealed_number)) {
         remove_oracle_data(user);
 
         return print("Didn't reveal last number therefore removed from oracles.");
@@ -82,7 +82,10 @@ public:
     check(time_block == iterator -> reveal_time_block, "Commit has expired.");
 
     // If already revealed, return an error.
-    check(!(iterator -> revealed_number), "Number has already been revealed.");
+    check(!(iterator -> revealed_number == 0), "Number has already been revealed.");
+
+    // If the revealed number is 0, return an error.
+    check((revealed_number != 0), "Number cannot be 0, must be between 1 and 999.");
 
     std::string revealed_number_string = std::to_string(revealed_number);
     char const *revealed_number_char = revealed_number_string.c_str();
@@ -250,7 +253,7 @@ private:
     name key;
     eosio::checksum256 hash;
     uint32_t reveal_time_block;
-    std::optional<uint32_t> revealed_number;
+    uint32_t revealed_number;
 
     uint64_t primary_key() const { return key.value; }
   };
