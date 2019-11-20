@@ -42,10 +42,7 @@ async function commitNewNumber() {
 
   console.log(`Committing "${randomNumberToReveal}" to be revealed on "${timeBlockAwaited}" time block.`);
 
-  console.log({ committingTimeBlock: getCurrentTimeBlock() });
   const commitSucceeded = await commitNumber(randomNumberHash, timeBlockAwaited);
-
-  console.log({oracles: await getTable('oracle')});
 
   if (!commitSucceeded) {
     timeBlockAwaited = null;
