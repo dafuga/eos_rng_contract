@@ -8,7 +8,6 @@ module.exports = async function commitNumber(randomNumberHash, revealTimeBlock) 
   const rpc = new JsonRpc(process.env.NODE_URL, {fetch});
   const api = new Api({rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder()});
 
-  console.log({revealTimeBlock})
   const actions = {
     actions: [{
       account: process.env.CONTRACT_ACCOUNT,

@@ -8,7 +8,7 @@ using namespace eosio;
 class [[eosio::contract("rng")]] rng : public eosio::contract {
   int oracle_registration_delay = 10;
   int number_of_seconds_to_keep_random_numbers = 100;
-  float participation_requirement_threshold = 0.6;
+  float participation_requirement_threshold = 0.5;
 
 public:
   rng(name receiver, name code, datastream<const char*> ds): contract(receiver, code, ds) {}
@@ -47,9 +47,10 @@ public:
         row.key = user;
         row.hash = hash;
         row.reveal_time_block = reveal_time_block;
+        row.revealed_number = 0;
       });
     } else {
-      if (!(committed_numbers_iterator -> revealed_number)) {
+      if (committed_numbers_iterator -> revealed_number == 0) {
         remove_oracle_data(user);
 
         return print("Didn't reveal last number therefore removed from oracles.");
@@ -57,6 +58,7 @@ public:
         committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
           row.hash = hash;
           row.reveal_time_block = reveal_time_block;
+          row.revealed_number = 0;
         });
       }
     }
@@ -82,7 +84,7 @@ public:
     check(time_block == iterator -> reveal_time_block, "Commit has expired.");
 
     // If already revealed, return an error.
-    check(!(iterator -> revealed_number == 0), "Number has already been revealed.");
+    check(iterator -> revealed_number == 0, "Number has already been revealed.");
 
     // If the revealed number is 0, return an error.
     check((revealed_number != 0), "Number cannot be 0, must be between 1 and 999.");

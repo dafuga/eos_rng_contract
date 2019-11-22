@@ -2,8 +2,6 @@ const commitNumber = require('./wrappers/commitnumber');
 const revealNumber = require('./wrappers/revealnumber');
 const regOracle = require('./wrappers/regoracle');
 
-const getTable = require('./wrappers/getTable');
-
 const generateHash = require('./utils/generateHash');
 const wait = require('./utils/wait');
 
@@ -56,19 +54,22 @@ async function commitNewNumber() {
 }
 
 async function revealCommittedNumber() {
-  if (timeBlockAwaited && timeBlockAwaited !== getCurrentTimeBlock()) {
+  if (timeBlockAwaited && timeBlockAwaited - 1 !== getCurrentTimeBlock()) {
     await wait(50);
 
     return await revealCommittedNumber();
   }
 
+  console.log(`Starting reveal at block ${getCurrentTimeBlock()}.`);
+
   const revealSucceeded = await revealNumber(getCurrentTimeBlock(), randomNumberToReveal);
 
-  if (!revealSucceeded) {
+  if (revealSucceeded) {
+    console.log(`Revealed "${randomNumberToReveal}" number at "${getCurrentTimeBlock()}" time block.`);
+  } else {
     await wait(10000);
   }
 
-  console.log(`Revealed "${randomNumberToReveal}" number at "${getCurrentTimeBlock()}" time block.`);
 
   timeBlockAwaited = null;
   randomNumberToReveal = null;
