@@ -81,7 +81,10 @@ public:
     check(time_block >= iterator -> reveal_time_block, "Commit is revealed too early.");
 
     // If after reveal time, return an error.
-    check(time_block == iterator -> reveal_time_block, "Commit has expired.");
+    check(
+      time_block > iterator -> reveal_time_block && time_block < (iterator -> reveal_time_block + 5),
+      "Commit has expired."
+    );
 
     // If already revealed, return an error.
     check(iterator -> revealed_number == 0, "Number has already been revealed.");

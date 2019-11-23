@@ -54,7 +54,7 @@ async function commitNewNumber() {
 }
 
 async function revealCommittedNumber() {
-  if (timeBlockAwaited && timeBlockAwaited - 1 !== getCurrentTimeBlock()) {
+  if (timeBlockAwaited && timeBlockAwaited !== getCurrentTimeBlock()) {
     await wait(50);
 
     return await revealCommittedNumber();
