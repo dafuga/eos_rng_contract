@@ -82,7 +82,7 @@ public:
 
     // If after reveal time, return an error.
     check(
-      time_block > iterator -> reveal_time_block && time_block < (iterator -> reveal_time_block + 5),
+      time_block <= (iterator -> reveal_time_block + 3),
       "Commit has expired."
     );
 

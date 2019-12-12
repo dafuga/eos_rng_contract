@@ -25,10 +25,12 @@ module.exports = async function commitNumber(randomNumberHash, revealTimeBlock) 
   };
 
   try {
-    return await api.transact(actions, {
+    const response = await api.transact(actions, {
       blocksBehind: 3,
       expireSeconds: 30,
     });
+
+    return response;
   } catch(error) {
     console.log(`\nCaught exception: ${error}`);
     return false;

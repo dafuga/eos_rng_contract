@@ -4,6 +4,7 @@ const regOracle = require('./wrappers/regoracle');
 
 const generateHash = require('./utils/generateHash');
 const wait = require('./utils/wait');
+const random64 = require('./utils/random64');
 
 let timeBlockAwaited;
 let randomNumberToReveal;
@@ -34,7 +35,8 @@ async function tick() {
 
 async function commitNewNumber() {
   // Generate a new random number and store it and it's hash in memory
-  randomNumberToReveal = Math.floor(Math.random() * 998 + 1);
+  randomNumberToReveal = random64();
+
   randomNumberHash = generateHash(randomNumberToReveal);
   timeBlockAwaited = getCurrentTimeBlock() + secondsInterval;
 
@@ -59,7 +61,7 @@ async function revealCommittedNumber() {
 
     return await revealCommittedNumber();
   }
-
+  
   console.log(`Starting reveal at block ${getCurrentTimeBlock()}.`);
 
   const revealSucceeded = await revealNumber(getCurrentTimeBlock(), randomNumberToReveal);
@@ -107,3 +109,5 @@ async function registerOracle() {
   console.log(`Waiting "${process.env.ORACLE_REGISTRATION_DELAY}" blocks to become a valid oracle.`);
   await wait(process.env.ORACLE_REGISTRATION_DELAY * 1100);
 }
+
+
