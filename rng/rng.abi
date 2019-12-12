@@ -44,7 +44,7 @@
                 },
                 {
                     "name": "revealed_number",
-                    "type": "uint32"
+                    "type": "uint64"
                 }
             ]
         },
@@ -108,7 +108,7 @@
                 },
                 {
                     "name": "revealed_number",
-                    "type": "uint32"
+                    "type": "uint64"
                 }
             ]
         },

@@ -65,7 +65,7 @@ public:
   }
 
   [[eosio::action]]
-  void revealnumber(name user, uint32_t reveal_time_block, uint32_t revealed_number) {
+  void revealnumber(name user, uint32_t reveal_time_block, uint64_t revealed_number) {
     uint32_t time_block = current_time_block();
 
     require_auth(user);
@@ -88,9 +88,6 @@ public:
 
     // If already revealed, return an error.
     check(iterator -> revealed_number == 0, "Number has already been revealed.");
-
-    // If the revealed number is 0, return an error.
-    check((revealed_number != 0), "Number cannot be 0, must be between 1 and 999.");
 
     std::string revealed_number_string = std::to_string(revealed_number);
     char const *revealed_number_char = revealed_number_string.c_str();
@@ -258,7 +255,7 @@ private:
     name key;
     eosio::checksum256 hash;
     uint32_t reveal_time_block;
-    uint32_t revealed_number;
+    uint64_t revealed_number;
 
     uint64_t primary_key() const { return key.value; }
   };
