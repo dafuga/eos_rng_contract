@@ -47,6 +47,7 @@ public:
         row.key = user;
         row.hash = hash;
         row.reveal_time_block = reveal_time_block;
+        row.curren
         row.revealed_number = 0;
       });
     } else {
@@ -255,6 +256,7 @@ private:
     name key;
     eosio::checksum256 hash;
     uint32_t reveal_time_block;
+    uint32_t current_time_block;
     uint64_t revealed_number;
 
     uint64_t primary_key() const { return key.value; }
