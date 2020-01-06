@@ -72,7 +72,7 @@
                 },
                 {
                     "name": "random_number",
-                    "type": "uint32"
+                    "type": "uint64"
                 },
                 {
                     "name": "commits_count",
@@ -166,7 +166,7 @@
     ],
     "tables": [
         {
-            "name": "committednum",
+            "name": "commitnumber",
             "type": "committed_numbers",
             "index_type": "i64",
             "key_names": [],

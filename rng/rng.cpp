@@ -47,7 +47,6 @@ public:
         row.key = user;
         row.hash = hash;
         row.reveal_time_block = reveal_time_block;
-        row.curren
         row.revealed_number = 0;
       });
     } else {
@@ -218,7 +217,7 @@ private:
   {
     uint32_t res = 0;
 
-    for (int i = 15; i >= 0; i--) {
+    for (int i = 63; i >= 0; i--) {
        // Find current bits in x and y
       bool b1 = x & (1 << i);
       bool b2 = y & (1 << i);
@@ -256,7 +255,6 @@ private:
     name key;
     eosio::checksum256 hash;
     uint32_t reveal_time_block;
-    uint32_t current_time_block;
     uint64_t revealed_number;
 
     uint64_t primary_key() const { return key.value; }
@@ -264,7 +262,7 @@ private:
 
   struct [[eosio::table]] random_numbers {
     uint32_t time_block;
-    uint32_t random_number;
+    uint64_t random_number;
     uint32_t commits_count;
     bool valid;
 
@@ -280,7 +278,7 @@ private:
 
   typedef eosio::multi_index<"stat"_n, stats> stats_index;
   typedef eosio::multi_index<"oracle"_n, oracles> oracles_index;
-  typedef eosio::multi_index<"committednum"_n, committed_numbers> committed_numbers_index;
+  typedef eosio::multi_index<"commitnumber"_n, committed_numbers> committed_numbers_index;
   typedef eosio::multi_index<"randomnumber"_n, random_numbers,
     indexed_by<"byvalid"_n, const_mem_fun<random_numbers, uint64_t, &random_numbers::get_secondary_1>>
     > random_numbers_index;
