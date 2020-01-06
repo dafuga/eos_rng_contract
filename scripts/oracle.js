@@ -7,20 +7,21 @@ const wait = require('./utils/wait');
 const random64 = require('./utils/random64');
 
 let timeBlockAwaited;
+let lastTimeBlock;
 let randomNumberToReveal;
 let randomNumberHash;
 let secondsInterval;
 
 (async () => {
-  secondsInterval = Number(process.argv[2]) || 2;
+  secondsInterval = Number(process.argv[2]) || 10;
 
   console.log(`Starting Oracle with "${secondsInterval}" seconds interval.`);
 
   require('dotenv').config();
 
-  await waitForBeginningOfNextIntervalBlock();
-
   await registerOracle();
+
+  await waitForBeginningOfNextIntervalBlock();
 
   await tick()
 })();
@@ -38,7 +39,9 @@ async function commitNewNumber() {
   randomNumberToReveal = random64();
 
   randomNumberHash = generateHash(randomNumberToReveal);
-  timeBlockAwaited = getCurrentTimeBlock() + secondsInterval;
+  timeBlockAwaited = (lastTimeBlock || getCurrentTimeBlock()) + secondsInterval;
+
+  lastTimeBlock = null;
 
   console.log(`Committing "${randomNumberToReveal}" to be revealed on "${timeBlockAwaited}" time block.`);
 
@@ -50,6 +53,8 @@ async function commitNewNumber() {
     randomNumberHash = null;
 
     await registerOracle();
+
+    await waitForBeginningOfNextIntervalBlock();
   }
 
   await tick();
@@ -61,24 +66,23 @@ async function revealCommittedNumber() {
 
     return await revealCommittedNumber();
   }
-  
+
   console.log(`Starting reveal at block ${getCurrentTimeBlock()}.`);
 
   const revealSucceeded = await revealNumber(getCurrentTimeBlock(), randomNumberToReveal);
 
   if (revealSucceeded) {
     console.log(`Revealed "${randomNumberToReveal}" number at "${getCurrentTimeBlock()}" time block.`);
-  } else {
-    await wait(10000);
-  }
 
+    lastTimeBlock = timeBlockAwaited;
+
+    // wait 500 ms for next block
+    await wait(500);
+  }
 
   timeBlockAwaited = null;
   randomNumberToReveal = null;
   randomNumberHash = null;
-
-  // wait 500 ms for next block
-  await wait(500);
 
   await tick();
 }
@@ -90,7 +94,9 @@ async function waitForBeginningOfNextIntervalBlock() {
   // Looking for reminder of time until next interval starts
   const secondsInInterval = (currentTimeBlock) % secondsInterval;
 
-  const nextTimeBlock = secondsInterval - secondsInInterval + currentTimeBlock - 1 ;
+  const nextTimeBlock = secondsInterval - secondsInInterval + currentTimeBlock - 1;
+
+  console.log({nextTimeBlock});
 
   while (nextTimeBlock !== getCurrentTimeBlock()) {
     await wait(50);
