@@ -105,11 +105,11 @@ public:
     // If already revealed, return an error.
     check(iterator -> revealed_number == 0, "Number has already been revealed.");
 
-    std::string revealed_number_string = std::to_string(revealed_number);
-    char const *revealed_number_char = revealed_number_string.c_str();
+    std::string revealed_number_with_user_name = std::to_string(iterator -> name + revealed_number);
+    char const *revealed_number_with_user_name_char = revealed_number_with_user_name.c_str();
 
     // will raise an error if invalid hash
-    assert_sha256(revealed_number_char, revealed_number_string.length(), iterator -> hash);
+    assert_sha256(revealed_number_with_user_name_char, revealed_number_with_user_name.length(), iterator -> hash);
 
     committed_numbers.modify(iterator, user, [&]( auto& row ) {
       row.revealed_number = revealed_number;
