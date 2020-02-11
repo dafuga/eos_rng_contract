@@ -146,7 +146,9 @@ public:
     auto random_numbers_itr = random_numbers.begin();
     while (random_numbers_itr != random_numbers.end()) {
       if (random_numbers_itr -> time_block < time_block - number_of_seconds_to_keep_random_numbers) {
-        random_numbers.erase(iterator);
+        random_numbers_itr = random_numbers.erase(iterator);
+      } else {
+        random_numbers_itr++
       }
     }
   }
