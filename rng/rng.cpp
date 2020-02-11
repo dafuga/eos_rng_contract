@@ -33,6 +33,18 @@ public:
        " time blocks."
     );
 
+    uint32_t can_commit_at =
+      oracles_count -> last_miss_timestamp + oracles_iterator -> misses_count * 1000;
+
+    bool is_not_banned_from_committing = can_commit_at < current_time_block;
+
+    check(
+      is_not_banned_from_committing,
+      "You have missed a reveal and will not be able to commit until" +
+       std::to_string(can_commit_at) +
+       " time block."
+    );
+
     // Make sure that we are not committing to the current block.
     check(
       reveal_time_block > current_block,
@@ -51,9 +63,13 @@ public:
       });
     } else {
       if (committed_numbers_iterator -> revealed_number == 0) {
-        remove_oracle_data(user);
+        auto oracles_iterator = oracles.find(user.value);
+        oracles_iterator.modify(oracles_iterator, user, [&]( auto& row ) {
+          row.last_miss_timestamp = current_block;
+          row.misses_count = oracles_iterator -> misses_count + 1;
+        });
 
-        return print("Didn't reveal last number therefore removed from oracles.");
+        print("Didn't reveal last number therefore temporarily banned from committing.");
       } else {
         committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
           row.hash = hash;
@@ -110,7 +126,7 @@ public:
     oracles.emplace(_self, [&]( auto& row ) {
       row.key = user;
       row.reg_at_block_time = current_time_block();
-      row. = current_time_block();
+      row.misses_count = 0;
     });
 
     // Update oracles count value.
