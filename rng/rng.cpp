@@ -110,6 +110,7 @@ public:
     oracles.emplace(_self, [&]( auto& row ) {
       row.key = user;
       row.reg_at_block_time = current_time_block();
+      row. = current_time_block();
     });
 
     // Update oracles count value.
@@ -141,15 +142,41 @@ public:
 
     uint32_t time_block = current_time_block();
 
-    random_numbers_index random_numbers(get_self(), get_first_receiver().value);
-
     // Going through every single random_number and deleting old rows.
-    for(auto& random_number : random_numbers) {
-      if (random_number.time_block < time_block - number_of_seconds_to_keep_random_numbers) {
-        auto iterator = random_numbers.find(random_number.time_block);
-
+    auto random_numbers_itr = random_numbers.begin();
+    while (random_numbers_itr != random_numbers.end()) {
+      if (random_numbers_itr -> time_block < time_block - number_of_seconds_to_keep_random_numbers) {
         random_numbers.erase(iterator);
       }
+    }
+  }
+
+  [[eosio::action]]
+  void resetdata() {
+    require_auth(_self);
+
+    // Going through every single oracle row and deleting them.
+    auto oracles_itr = oracles.begin();
+    while (oracles_itr != oracles.end()) {
+      oracles_itr = oracles.erase(oracles_itr);
+    }
+
+    // Going through every single random_number row and deleting them.
+    auto random_numbers_itr = random_numbers.begin();
+    while (random_numbers_itr != random_numbers.end()) {
+      random_numbers_itr = random_numbers.erase(random_numbers_itr);
+    }
+
+    // Going through every single committed_numbers row and deleting them.
+    auto committed_numbers_itr = committed_numbers.begin();
+    while (committed_numbers_itr != committed_numbers.end()) {
+      committed_numbers_itr = committed_numbers.erase(committed_numbers_itr);
+    }
+
+    // Going through every single committed_numbers row and deleting them.
+    auto stats_itr = stats.begin();
+    while (stats_itr != stats.end()) {
+      stats_itr = stats.erase(stats_itr);
     }
   }
 
@@ -190,6 +217,11 @@ private:
     auto oracles_iterator = oracles.find(user.value);
 
     check(oracles_iterator != oracles.end(), "Oracle does not exist.");
+
+    check(
+      oracles_iterator -> last_miss_timestamp + 604800 < current_time_block(),
+      "Last miss was less than a week ago."
+    );
 
     oracles.erase(oracles_iterator);
 
@@ -247,6 +279,8 @@ private:
   struct [[eosio::table]] oracles {
     name key;
     uint32_t reg_at_block_time;
+    uint32_t misses_count;
+    uint32_t last_miss_timestamp;
 
     uint64_t primary_key() const { return key.value; }
   };
