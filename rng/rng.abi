@@ -59,6 +59,14 @@
                 {
                     "name": "reg_at_block_time",
                     "type": "uint32"
+                },
+                {
+                    "name": "misses_count",
+                    "type": "uint32"
+                },
+                {
+                    "name": "last_miss_timestamp",
+                    "type": "uint32"
                 }
             ]
         },
@@ -93,6 +101,11 @@
                     "type": "name"
                 }
             ]
+        },
+        {
+            "name": "resetdata",
+            "base": "",
+            "fields": []
         },
         {
             "name": "revealnumber",
@@ -151,6 +164,11 @@
         {
             "name": "regoracle",
             "type": "regoracle",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "resetdata",
+            "type": "resetdata",
             "ricardian_contract": ""
         },
         {

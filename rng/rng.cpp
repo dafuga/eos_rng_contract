@@ -34,9 +34,9 @@ public:
     );
 
     uint32_t can_commit_at =
-      oracles_count -> last_miss_timestamp + oracles_iterator -> misses_count * 1000;
+      oracles_iterator -> last_miss_timestamp + oracles_iterator -> misses_count * 1000;
 
-    bool is_not_banned_from_committing = can_commit_at < current_time_block;
+    bool is_not_banned_from_committing = can_commit_at < current_time_block();
 
     check(
       is_not_banned_from_committing,
@@ -64,7 +64,7 @@ public:
     } else {
       if (committed_numbers_iterator -> revealed_number == 0) {
         auto oracles_iterator = oracles.find(user.value);
-        oracles_iterator.modify(oracles_iterator, user, [&]( auto& row ) {
+        oracles.modify(oracles_iterator, user, [&]( auto& row ) {
           row.last_miss_timestamp = current_block;
           row.misses_count = oracles_iterator -> misses_count + 1;
         });
@@ -88,34 +88,34 @@ public:
 
     committed_numbers_index committed_numbers(get_self(), get_first_receiver().value);
 
-    auto iterator = committed_numbers.find(user.value);
+    auto committed_numbers_iterator = committed_numbers.find(user.value);
 
     // If a commit was not made, return an error.
-    check(iterator != committed_numbers.end(), "No commits were made.");
+    check(committed_numbers_iterator != committed_numbers.end(), "No commits were made.");
 
     // If before reveal time, return an error.
-    check(time_block >= iterator -> reveal_time_block, "Commit is revealed too early.");
+    check(time_block >= committed_numbers_iterator -> reveal_time_block, "Commit is revealed too early.");
 
     // If after reveal time, return an error.
     check(
-      time_block <= (iterator -> reveal_time_block + 3),
+      time_block <= (committed_numbers_iterator -> reveal_time_block + 3),
       "Commit has expired."
     );
 
     // If already revealed, return an error.
-    check(iterator -> revealed_number == 0, "Number has already been revealed.");
+    check(committed_numbers_iterator -> revealed_number == 0, "Number has already been revealed.");
 
-    std::string revealed_number_with_user_name = std::to_string(iterator -> name + revealed_number);
+    std::string revealed_number_with_user_name = std::to_string((committed_numbers_iterator -> key).value + revealed_number);
     char const *revealed_number_with_user_name_char = revealed_number_with_user_name.c_str();
 
     // will raise an error if invalid hash
-    assert_sha256(revealed_number_with_user_name_char, revealed_number_with_user_name.length(), iterator -> hash);
+    assert_sha256(revealed_number_with_user_name_char, revealed_number_with_user_name.length(), committed_numbers_iterator -> hash);
 
-    committed_numbers.modify(iterator, user, [&]( auto& row ) {
+    committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
       row.revealed_number = revealed_number;
     });
 
-    update_global_random_number(user, revealed_number, iterator -> reveal_time_block);
+    update_global_random_number(user, revealed_number, committed_numbers_iterator -> reveal_time_block);
   }
 
   [[eosio::action]]
@@ -159,12 +159,14 @@ public:
     uint32_t time_block = current_time_block();
 
     // Going through every single random_number and deleting old rows.
-    auto random_numbers_itr = random_numbers.begin();
-    while (random_numbers_itr != random_numbers.end()) {
-      if (random_numbers_itr -> time_block < time_block - number_of_seconds_to_keep_random_numbers) {
-        random_numbers_itr = random_numbers.erase(iterator);
+    random_numbers_index random_numbers(get_self(), get_first_receiver().value);
+
+    auto random_numbers_iterator = random_numbers.begin();
+    while (random_numbers_iterator != random_numbers.end()) {
+      if (random_numbers_iterator -> time_block < time_block - number_of_seconds_to_keep_random_numbers) {
+        random_numbers_iterator = random_numbers.erase(random_numbers_iterator);
       } else {
-        random_numbers_itr++
+        random_numbers_iterator++;
       }
     }
   }
@@ -173,28 +175,36 @@ public:
   void resetdata() {
     require_auth(_self);
 
+    oracles_index oracles(get_self(), get_first_receiver().value);
+
     // Going through every single oracle row and deleting them.
-    auto oracles_itr = oracles.begin();
-    while (oracles_itr != oracles.end()) {
-      oracles_itr = oracles.erase(oracles_itr);
+    auto oracles_iterator = oracles.begin();
+    while (oracles_iterator != oracles.end()) {
+      oracles_iterator = oracles.erase(oracles_iterator);
     }
 
     // Going through every single random_number row and deleting them.
-    auto random_numbers_itr = random_numbers.begin();
-    while (random_numbers_itr != random_numbers.end()) {
-      random_numbers_itr = random_numbers.erase(random_numbers_itr);
+    random_numbers_index random_numbers(get_self(), get_first_receiver().value);
+
+    auto random_numbers_iterator = random_numbers.begin();
+    while (random_numbers_iterator != random_numbers.end()) {
+      random_numbers_iterator = random_numbers.erase(random_numbers_iterator);
     }
 
-    // Going through every single committed_numbers row and deleting them.
-    auto committed_numbers_itr = committed_numbers.begin();
-    while (committed_numbers_itr != committed_numbers.end()) {
-      committed_numbers_itr = committed_numbers.erase(committed_numbers_itr);
-    }
+    committed_numbers_index committed_numbers(get_self(), get_first_receiver().value);
 
     // Going through every single committed_numbers row and deleting them.
-    auto stats_itr = stats.begin();
-    while (stats_itr != stats.end()) {
-      stats_itr = stats.erase(stats_itr);
+    auto committed_numbers_iterator = committed_numbers.begin();
+    while (committed_numbers_iterator != committed_numbers.end()) {
+      committed_numbers_iterator = committed_numbers.erase(committed_numbers_iterator);
+    }
+
+    stats_index stats(get_self(), get_first_receiver().value);
+
+    // Going through every single committed_numbers row and deleting them.
+    auto stats_iterator = stats.begin();
+    while (stats_iterator != stats.end()) {
+      stats_iterator = stats.erase(stats_iterator);
     }
   }
 
