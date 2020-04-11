@@ -40,7 +40,7 @@ public:
 
     check(
       is_not_banned_from_committing,
-      "You have missed a reveal and will not be able to commit until" +
+      "You have missed a reveal and will not be able to commit until " +
        std::to_string(can_commit_at) +
        " time block."
     );
@@ -68,8 +68,6 @@ public:
           row.last_miss_timestamp = current_block;
           row.misses_count = oracles_iterator -> misses_count + 1;
         });
-
-        print("Didn't reveal last number therefore temporarily banned from committing.");
       } else {
         committed_numbers.modify(committed_numbers_iterator, user, [&]( auto& row ) {
           row.hash = hash;
@@ -148,6 +146,8 @@ public:
   [[eosio::action]]
   void unregoracle(name user) {
     require_auth(user);
+
+    // Eventually, we need to prevent anyone that has missed a block in the last week from unregistering.
 
     remove_oracle_data(user);
   }

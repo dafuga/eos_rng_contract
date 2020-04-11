@@ -21,8 +21,6 @@ let secondsInterval;
 
   require('dotenv').config();
 
-  // await registerOracle();
-
   await waitForBeginningOfNextIntervalBlock();
 
   await tick()
@@ -52,13 +50,9 @@ async function commitNewNumber() {
   const commitSucceeded = await commitNumber(randomNumberHash, timeBlockAwaited);
 
   if (!commitSucceeded) {
-    timeBlockAwaited = null;
-    randomNumberToReveal = null;
-    randomNumberHash = null;
+    console.log("Commit failed for some reason, exiting gracefully.")
 
-    await registerOracle();
-
-    await waitForBeginningOfNextIntervalBlock();
+    process.exit();
   }
 
   await tick();
@@ -82,6 +76,10 @@ async function revealCommittedNumber() {
 
     // wait 500 ms for next block
     await wait(500);
+  } else {
+    console.log("Reveal failed for some reason, exiting gracefully.")
+
+    process.exit();
   }
 
   timeBlockAwaited = null;
@@ -112,12 +110,3 @@ function getCurrentTimeBlock() {
 
   return Math.floor(millisecondsSinceEpoch / 1000);
 }
-
-async function registerOracle() {
-  console.log(`Registering Oracle.`);
-  await regOracle();
-  console.log(`Waiting "${process.env.ORACLE_REGISTRATION_DELAY}" blocks to become a valid oracle.`);
-  await wait(process.env.ORACLE_REGISTRATION_DELAY * 1100);
-}
-
-
