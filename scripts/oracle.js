@@ -1,3 +1,5 @@
+const eosjsAccountName = require("eosjs-account-name")
+
 const commitNumber = require('./wrappers/commitnumber');
 const revealNumber = require('./wrappers/revealnumber');
 const regOracle = require('./wrappers/regoracle');
@@ -19,7 +21,7 @@ let secondsInterval;
 
   require('dotenv').config();
 
-  await registerOracle();
+  // await registerOracle();
 
   await waitForBeginningOfNextIntervalBlock();
 
@@ -38,7 +40,9 @@ async function commitNewNumber() {
   // Generate a new random number and store it and it's hash in memory
   randomNumberToReveal = random64();
 
-  randomNumberHash = generateHash(randomNumberToReveal);
+  const oracleNameBase64Int = eosjsAccountName.nameToUint64(process.env.ORACLE_ACCOUNT_NAME);
+
+  randomNumberHash = generateHash(oracleNameBase64Int +randomNumberToReveal.toString());
   timeBlockAwaited = (lastTimeBlock || getCurrentTimeBlock()) + secondsInterval;
 
   lastTimeBlock = null;

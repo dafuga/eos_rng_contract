@@ -105,7 +105,7 @@ public:
     // If already revealed, return an error.
     check(committed_numbers_iterator -> revealed_number == 0, "Number has already been revealed.");
 
-    std::string revealed_number_with_user_name = std::to_string((committed_numbers_iterator -> key).value + revealed_number);
+    std::string revealed_number_with_user_name = std::to_string((committed_numbers_iterator -> key).value) + std::to_string(revealed_number);
     char const *revealed_number_with_user_name_char = revealed_number_with_user_name.c_str();
 
     // will raise an error if invalid hash

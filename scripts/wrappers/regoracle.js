@@ -10,7 +10,7 @@ module.exports = async function regoracle() {
 
   const actions = {
     actions: [{
-      account: process.env.CONTRACT_ACCOUNT,
+      account: process.env.CONTRACT_ACCOUNT_NAME,
       name: 'regoracle',
       authorization: [{
         actor: process.env.ORACLE_ACCOUNT_NAME,

@@ -10,7 +10,7 @@ module.exports = async function commitNumber(randomNumberHash, revealTimeBlock) 
 
   const actions = {
     actions: [{
-      account: process.env.CONTRACT_ACCOUNT,
+      account: process.env.CONTRACT_ACCOUNT_NAME,
       name: 'commitnumber',
       authorization: [{
         actor: process.env.ORACLE_ACCOUNT_NAME,
