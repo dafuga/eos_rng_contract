@@ -209,7 +209,7 @@ public:
   }
 
 private:
-  void update_global_random_number(name user, int random_number, int current_time_block) {
+  void update_global_random_number(name user, uint64_t random_number, uint32_t current_time_block) {
     random_numbers_index random_numbers(get_self(), get_first_receiver().value);
     auto random_numbers_iterator = random_numbers.find(current_time_block);
 
@@ -273,9 +273,9 @@ private:
     }
   };
 
-  uint32_t compute_xor(uint32_t x, uint32_t y)
+  uint64_t compute_xor(uint64_t x, uint64_t y)
   {
-    uint32_t res = 0;
+    uint64_t res = 0;
 
     for (int i = 63; i >= 0; i--) {
        // Find current bits in x and y

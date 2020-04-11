@@ -98,8 +98,6 @@ async function waitForBeginningOfNextIntervalBlock() {
 
   const nextTimeBlock = secondsInterval - secondsInInterval + currentTimeBlock - 1;
 
-  console.log({nextTimeBlock});
-
   while (nextTimeBlock !== getCurrentTimeBlock()) {
     await wait(50);
   }
